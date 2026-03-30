@@ -1,0 +1,677 @@
+<script>
+// ══════════════════════════════════════════════════════════════
+//  Oxo Partners · Admin · Indicadores  (v4 — filtros prof.)
+// ══════════════════════════════════════════════════════════════
+
+var _indHoteles            = [];
+var _indSeleccionados      = [];
+var _indHistorico          = null;
+var _indInitialized        = false;
+var _indTabActual          = "mensual";
+var _histSortKey           = "anio";
+var _histSortAsc           = false;
+var _menMesActual          = 0;
+var _menAnioActual         = 0;
+var _anuAnioActual         = 0;
+var _hotelDropdownListened = false;
+
+var IND_COLORS  = ["#8A6E3D","#52c41a","#1677ff","#f5222d","#722ed1","#eb2f96","#fa8c16","#13c2c2"];
+var MESES_SHORT = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+var MESES_LABEL = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEPT","OCT","NOV","DIC"];
+
+// ── Init ──────────────────────────────────────────────────────
+
+function initIndicadores() {
+  if (!_indInitialized) {
+    _indInitialized = true;
+    loadIndicadores();
+  } else {
+    _renderTabActual_();
+  }
+}
+
+function loadIndicadores() {
+  var btn = document.querySelector(".btn-cerrar-mes");
+  if (btn) btn.disabled = true;
+
+  var hotelesOk = false, historicoOk = false;
+  var hotelData = null, histData = null;
+
+  function _tryInit_() {
+    if (!hotelesOk || !historicoOk) return;
+    _indHoteles   = hotelData;
+    _indHistorico = histData;
+    _poblarMenMonthStrip_();
+    _poblarSelectoresHoteles_();
+    _poblarSelectoresAnio_();
+    _setDefaultsMensual_();
+    _addDropdownOutsideClickListener_();
+    _renderTabActual_();
+    if (btn) btn.disabled = false;
+  }
+
+  google.script.run
+    .withSuccessHandler(function(h) { hotelData = h || []; hotelesOk = true; _tryInit_(); })
+    .withFailureHandler(function(e) { showToast("Error cargando hoteles: " + _errMsg_(e), "error"); if (btn) btn.disabled = false; })
+    .getHotelesList();
+
+  google.script.run
+    .withSuccessHandler(function(d) { histData = d; historicoOk = true; _tryInit_(); })
+    .withFailureHandler(function(e) { showToast("Error cargando histórico: " + _errMsg_(e), "error"); if (btn) btn.disabled = false; })
+    .getHistoricoData([]);
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+
+function switchIndTab(tab) {
+  _indTabActual = tab;
+  document.querySelectorAll(".ind-tab").forEach(function(b) {
+    b.classList.toggle("active", b.dataset.tab === tab);
+  });
+  document.querySelectorAll(".ind-tab-panel").forEach(function(p) {
+    p.style.display = p.id === "ind-panel-" + tab ? "block" : "none";
+  });
+  _renderTabActual_();
+}
+
+function _renderTabActual_() {
+  if (!_indHistorico) return;
+  if (_indTabActual === "mensual")      renderMensual();
+  if (_indTabActual === "indicadores")  renderAnual();
+  if (_indTabActual === "comparativa")  renderComparativa();
+  if (_indTabActual === "historico")    renderHistorico();
+}
+
+// ── Month strip ───────────────────────────────────────────────
+
+function _poblarMenMonthStrip_() {
+  var strip = document.getElementById("menMonthStrip");
+  if (!strip) return;
+  strip.innerHTML = MESES_LABEL.map(function(l, i) {
+    return '<button class="ind-month-pill" data-mes="' + (i + 1) + '" ' +
+      'onclick="_clickMenMes_(' + (i + 1) + ')">' + l + '</button>';
+  }).join("");
+}
+
+function _clickMenMes_(mes) {
+  _menMesActual = mes;
+  document.querySelectorAll("#menMonthStrip .ind-month-pill").forEach(function(p) {
+    p.classList.toggle("is-active", Number(p.dataset.mes) === mes);
+  });
+  renderMensual();
+}
+
+function _activateMenMes_(mes) {
+  _menMesActual = mes;
+  document.querySelectorAll("#menMonthStrip .ind-month-pill").forEach(function(p) {
+    p.classList.toggle("is-active", Number(p.dataset.mes) === mes);
+  });
+}
+
+// ── Year chips ────────────────────────────────────────────────
+
+function _renderYearChips_(containerId, anios, activeAnio, prefix) {
+  var wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  wrap.innerHTML = anios.map(function(a) {
+    return '<button class="ind-year-chip' + (a === activeAnio ? " is-active" : "") + '" ' +
+      'onclick="_clickAnioChip_(\'' + prefix + '\',' + a + ')">' + a + '</button>';
+  }).join("");
+}
+
+function _clickAnioChip_(prefix, anio) {
+  if (prefix === "men") {
+    _menAnioActual = anio;
+    document.querySelectorAll("#menYearChips .ind-year-chip").forEach(function(c) {
+      c.classList.toggle("is-active", Number(c.textContent) === anio);
+    });
+    renderMensual();
+  } else if (prefix === "anu") {
+    _anuAnioActual = anio;
+    document.querySelectorAll("#anuYearChips .ind-year-chip").forEach(function(c) {
+      c.classList.toggle("is-active", Number(c.textContent) === anio);
+    });
+    renderAnual();
+  }
+}
+
+// ── Hotel search-select ───────────────────────────────────────
+
+function _renderHotelOptions_(prefix, query) {
+  var optionsEl = document.getElementById(prefix + "HotelOptions");
+  if (!optionsEl) return;
+  var q = (query || "").toLowerCase();
+  var filtered = _indHoteles.filter(function(h) {
+    return !q || h.nombre.toLowerCase().indexOf(q) !== -1 ||
+      h.codigo.toLowerCase().indexOf(q) !== -1;
+  });
+  var currentVal = document.getElementById(prefix + "Hotel") ? document.getElementById(prefix + "Hotel").value : "";
+  optionsEl.innerHTML = filtered.length
+    ? filtered.map(function(h) {
+        return '<div class="ind-hotel-option' + (h.codigo === currentVal ? " is-active" : "") + '" ' +
+          'data-codigo="' + esc(h.codigo) + '" data-nombre="' + esc(h.nombre) + '" ' +
+          'onclick="_onHotelOptionClick_(this,\'' + prefix + '\')">' +
+          esc(h.nombre) + '</div>';
+      }).join("")
+    : '<div class="ind-hotel-option" style="pointer-events:none;color:var(--textMuted)">Sin resultados</div>';
+}
+
+function _onHotelOptionClick_(el, prefix) {
+  var codigo = el.getAttribute("data-codigo");
+  var nombre = el.getAttribute("data-nombre");
+  _closeHotelDropdown_(prefix);
+  var hiddenInput = document.getElementById(prefix + "Hotel");
+  var label       = document.getElementById(prefix + "HotelLabel");
+  if (hiddenInput) hiddenInput.value = codigo;
+  if (label)       label.textContent  = nombre;
+  if (prefix === "men") renderMensual();
+  if (prefix === "anu") renderAnual();
+}
+
+function _toggleMenHotelDropdown_() { _toggleHotelDropdown_("men"); }
+function _toggleAnuHotelDropdown_() { _toggleHotelDropdown_("anu"); }
+
+function _toggleHotelDropdown_(prefix) {
+  var dropdown = document.getElementById(prefix + "HotelDropdown");
+  var btn      = document.getElementById(prefix + "HotelBtn");
+  if (!dropdown) return;
+  var isOpen = dropdown.classList.contains("is-open");
+  ["men","anu"].forEach(function(p) { _closeHotelDropdown_(p); });
+  if (!isOpen) {
+    dropdown.classList.add("is-open");
+    if (btn) btn.classList.add("is-open");
+    var inp = document.getElementById(prefix + "HotelSearchInput");
+    if (inp) { inp.value = ""; inp.focus(); }
+    _renderHotelOptions_(prefix, "");
+  }
+}
+
+function _closeHotelDropdown_(prefix) {
+  var d = document.getElementById(prefix + "HotelDropdown");
+  var b = document.getElementById(prefix + "HotelBtn");
+  if (d) d.classList.remove("is-open");
+  if (b) b.classList.remove("is-open");
+}
+
+function _filterMenHotelOptions_(val) { _renderHotelOptions_("men", val); }
+function _filterAnuHotelOptions_(val) { _renderHotelOptions_("anu", val); }
+
+function _addDropdownOutsideClickListener_() {
+  if (_hotelDropdownListened) return;
+  _hotelDropdownListened = true;
+  document.addEventListener("click", function(e) {
+    if (!e.target.closest(".ind-hotel-search-wrap")) {
+      ["men","anu"].forEach(function(p) { _closeHotelDropdown_(p); });
+    }
+  });
+}
+
+// ── Poblar selectores ─────────────────────────────────────────
+
+function _poblarSelectoresHoteles_() {
+  // Comparativa chips
+  var wrap = document.getElementById("indHotelList");
+  if (wrap) {
+    wrap.innerHTML = _indHoteles.length
+      ? _indHoteles.map(function(h) {
+          var sel = _indSeleccionados.indexOf(h.codigo) !== -1;
+          return '<div class="ind-hotel-chip' + (sel ? " is-selected" : "") + '" ' +
+            'data-codigo="' + esc(h.codigo) + '" onclick="_toggleHotelChip_(this)">' +
+            esc(h.nombre) + "</div>";
+        }).join("")
+      : '<div class="ind-loading-sm">Sin hoteles configurados.</div>';
+  }
+
+  // Histórico filter
+  var hf = document.getElementById("histHotelFiltro");
+  if (hf) {
+    hf.innerHTML = '<option value="">Todos</option>' +
+      _indHoteles.map(function(h) {
+        return '<option value="' + esc(h.codigo) + '">' + esc(h.nombre) + '</option>';
+      }).join("");
+  }
+
+  // Dropdowns mensual e indicadores
+  _renderHotelOptions_("men", "");
+  _renderHotelOptions_("anu", "");
+}
+
+function _poblarSelectoresAnio_() {
+  if (!_indHistorico || !_indHistorico.rows) return;
+  var anios = _indHistorico.rows
+    .map(function(r) { return Number(r.anio); })
+    .filter(function(v, i, a) { return !isNaN(v) && a.indexOf(v) === i; })
+    .sort(function(a, b) { return a - b; });
+  if (!anios.length) return;
+
+  var maxAnio = anios[anios.length - 1];
+  _menAnioActual = maxAnio;
+  _anuAnioActual = maxAnio;
+
+  _renderYearChips_("menYearChips", anios, maxAnio, "men");
+  _renderYearChips_("anuYearChips", anios, maxAnio, "anu");
+
+  var optsAnio = anios.map(function(a) {
+    return '<option value="' + a + '">' + a + '</option>';
+  }).join("");
+
+  var cmpEl = document.getElementById("cmpAnio");
+  if (cmpEl) { cmpEl.innerHTML = optsAnio; cmpEl.value = String(maxAnio); }
+
+  var haf = document.getElementById("histAnioFiltro");
+  if (haf) { haf.innerHTML = '<option value="">Todos</option>' + optsAnio; }
+}
+
+function _setDefaultsMensual_() {
+  var now  = new Date();
+  var mes  = now.getMonth(); // 0-indexed → mes anterior
+  var anio = now.getFullYear();
+  if (mes === 0) { mes = 12; anio--; }
+
+  _activateMenMes_(mes);
+
+  if (_indHoteles.length) {
+    var h = _indHoteles[0];
+    var menInput = document.getElementById("menHotel");
+    var menLabel = document.getElementById("menHotelLabel");
+    if (menInput) menInput.value  = h.codigo;
+    if (menLabel) menLabel.textContent = h.nombre;
+
+    var anuInput = document.getElementById("anuHotel");
+    var anuLabel = document.getElementById("anuHotelLabel");
+    if (anuInput) anuInput.value  = h.codigo;
+    if (anuLabel) anuLabel.textContent = h.nombre;
+  }
+}
+
+// ── Tab Mensual ───────────────────────────────────────────────
+
+function renderMensual() {
+  if (!_indHistorico) return;
+  var hotelCodigo = document.getElementById("menHotel") ? document.getElementById("menHotel").value : "";
+  var mes  = _menMesActual;
+  var anio = _menAnioActual;
+  var emptyEl = document.getElementById("menEmpty");
+  var kpiEl   = document.getElementById("menKpiGrid");
+
+  var row = (_indHistorico.rows || []).find(function(r) {
+    return String(r.hotel_codigo) === String(hotelCodigo) &&
+           Number(r.anio) === anio && Number(r.mes_num) === mes;
+  });
+
+  if (!row) {
+    if (emptyEl) emptyEl.style.display = "flex";
+    if (kpiEl)   kpiEl.style.opacity   = "0.3";
+    setText("menKpiOcc","—"); setText("menKpiTarifa","—");
+    setText("menKpiRevpar","—"); setText("menKpiIngresos","—");
+    ["menKpiOccDelta","menKpiTarifaDelta","menKpiRevparDelta"].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.innerHTML = "";
+    });
+    ["menChart","menChartIngresos"].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.innerHTML = "";
+    });
+    var ml = document.getElementById("menLegend");   if (ml) ml.innerHTML = "";
+    var il = document.getElementById("menIngLegend"); if (il) il.innerHTML = "";
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = "none";
+  if (kpiEl)   kpiEl.style.opacity   = "1";
+
+  setText("menKpiOcc",      row.occ_real    != null ? (Number(row.occ_real) * 100).toFixed(1) + "%" : "—");
+  setText("menKpiTarifa",   row.tarifa_real != null ? "$" + _fmtNum_(row.tarifa_real) : "—");
+  setText("menKpiRevpar",   row.revpar_real != null ? "$" + _fmtNum_(row.revpar_real) : "—");
+  setText("menKpiIngresos", row.ing_total   != null ? "$" + _fmtNum_(row.ing_total)   : "—");
+
+  _renderKpiDelta_("menKpiOccDelta",    row.occ_real,    row.occ_ant,    true);
+  _renderKpiDelta_("menKpiTarifaDelta", row.tarifa_real, row.tarifa_ant, false);
+  _renderKpiDelta_("menKpiRevparDelta", row.revpar_real, row.revpar_ant, false);
+
+  _renderMensualChart_(row);
+  _renderMenChartIngresos_(row);
+}
+
+function _renderMensualChart_(row) {
+  _renderIndChartMain_Mensual_(row);
+}
+
+// Delta badge
+function _renderKpiDelta_(elId, real, ant, isPercent) {
+  var el = document.getElementById(elId); if (!el) return;
+  if (real == null || ant == null || Number(ant) === 0) { el.innerHTML = ""; return; }
+  var r = Number(real), a = Number(ant);
+  if (isNaN(r) || isNaN(a)) { el.innerHTML = ""; return; }
+  var cls, icon, text;
+  if (isPercent) {
+    var delta = (r - a) * 100;
+    cls  = delta >  0.2 ? "up"   : delta < -0.2 ? "down"   : "flat";
+    icon = delta >  0.2 ? "bi-arrow-up-short" : delta < -0.2 ? "bi-arrow-down-short" : "bi-dash";
+    text = (delta >= 0 ? "+" : "") + delta.toFixed(1) + " PP vs año ant.";
+  } else {
+    var pct = (r - a) / Math.abs(a);
+    cls  = pct >  0.005 ? "up"   : pct < -0.005 ? "down"   : "flat";
+    icon = pct >  0.005 ? "bi-arrow-up-short" : pct < -0.005 ? "bi-arrow-down-short" : "bi-dash";
+    text = (pct >= 0 ? "+" : "") + (pct * 100).toFixed(1) + "% vs año ant.";
+  }
+  el.innerHTML = '<span class="kpi-delta kpi-delta-' + cls +
+    '"><i class="bi ' + icon + '"></i>' + text + '</span>';
+}
+
+// ── Tab Indicadores (era Anual) ───────────────────────────────
+
+function renderAnual() {
+  if (!_indHistorico) return;
+  var hotelCodigo = document.getElementById("anuHotel") ? document.getElementById("anuHotel").value : "";
+  var anio        = _anuAnioActual;
+  var emptyEl     = document.getElementById("anuEmpty");
+  var kpiEl       = document.getElementById("anuKpiGrid");
+
+  var rows = (_indHistorico.rows || []).filter(function(r) {
+    return String(r.hotel_codigo) === String(hotelCodigo) && Number(r.anio) === anio;
+  });
+
+  if (!rows.length) {
+    if (emptyEl) emptyEl.style.display = "flex";
+    if (kpiEl)   kpiEl.style.opacity   = "0.3";
+    ["anuKpiOcc","anuKpiTarifa","anuKpiRevpar","anuKpiIngresos"].forEach(function(id) { setText(id,"—"); });
+    ["anuKpiOccDelta","anuKpiTarifaDelta","anuKpiRevparDelta"].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.innerHTML = "";
+    });
+    ["anuChartOcc","anuChartTarifa","anuChartRevpar"].forEach(function(id) {
+      var el = document.getElementById(id); if (el) el.innerHTML = "";
+    });
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = "none";
+  if (kpiEl)   kpiEl.style.opacity   = "1";
+
+  var occ    = _avg_(rows, "occ_real");
+  var tarifa = _avg_(rows, "tarifa_real");
+  var revpar = _avg_(rows, "revpar_real");
+  var total  = rows.reduce(function(s, r) { return s + (Number(r.ing_total) || 0); }, 0);
+
+  setText("anuKpiOcc",      occ    != null ? (occ * 100).toFixed(1) + "%" : "—");
+  setText("anuKpiTarifa",   tarifa != null ? "$" + _fmtNum_(tarifa) : "—");
+  setText("anuKpiRevpar",   revpar != null ? "$" + _fmtNum_(revpar) : "—");
+  setText("anuKpiIngresos", total  > 0     ? "$" + _fmtNum_(total)  : "—");
+
+  _renderKpiDelta_("anuKpiOccDelta",    occ,    _avg_(rows, "occ_ant"),    true);
+  _renderKpiDelta_("anuKpiTarifaDelta", tarifa, _avg_(rows, "tarifa_ant"), false);
+  _renderKpiDelta_("anuKpiRevparDelta", revpar, _avg_(rows, "revpar_ant"), false);
+
+  _renderIndChartMain_Anual_(rows, "occ",    "anuChartOcc",    "anuOccLegend");
+  _renderIndChartMain_Anual_(rows, "tarifa", "anuChartTarifa", "anuTarifaLegend");
+  _renderIndChartMain_Anual_(rows, "revpar", "anuChartRevpar", "anuRevparLegend");
+}
+
+// ── Tab Comparativa ───────────────────────────────────────────
+
+function _toggleHotelChip_(el) {
+  var codigo = el.getAttribute("data-codigo");
+  var idx = _indSeleccionados.indexOf(codigo);
+  if (idx === -1) { _indSeleccionados.push(codigo); el.classList.add("is-selected"); }
+  else            { _indSeleccionados.splice(idx, 1); el.classList.remove("is-selected"); }
+  renderComparativa();
+}
+
+function renderComparativa() {
+  if (!_indHistorico) return;
+  var anio    = parseInt(document.getElementById("cmpAnio")    ? document.getElementById("cmpAnio").value    : "0", 10);
+  var metrica = document.getElementById("cmpMetrica") ? document.getElementById("cmpMetrica").value : "occ";
+  var emptyEl = document.getElementById("cmpEmpty");
+
+  var rows = (_indHistorico.rows || []).filter(function(r) { return Number(r.anio) === anio; });
+  if (_indSeleccionados.length) {
+    rows = rows.filter(function(r) { return _indSeleccionados.indexOf(r.hotel_codigo) !== -1; });
+  }
+
+  if (!rows.length) {
+    if (emptyEl) emptyEl.style.display = "flex";
+    var cc = document.getElementById("cmpChart");         if (cc) cc.innerHTML = "";
+    var ci = document.getElementById("cmpChartIngresos"); if (ci) ci.innerHTML = "";
+    document.getElementById("indRanking").innerHTML = "";
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = "none";
+
+  var titleEl = document.getElementById("cmpChartTitle");
+  var labels  = { occ: "Ocupación", tarifa: "Tarifa Promedio", revpar: "RevPAR" };
+  if (titleEl) titleEl.innerHTML = '<i class="bi bi-diagram-3"></i> Comparativa — ' + (labels[metrica] || metrica);
+
+  _renderIndChartMain_(rows, metrica, "cmpChart", "cmpLegend");
+  _renderIndChartIngresos_(rows, "cmpChartIngresos");
+  _renderIndRanking_(rows, metrica);
+}
+
+// ── Tab Histórico ─────────────────────────────────────────────
+
+function renderHistorico() {
+  if (!_indHistorico) return;
+  var hotelFiltro = document.getElementById("histHotelFiltro") ? document.getElementById("histHotelFiltro").value : "";
+  var anioFiltro  = document.getElementById("histAnioFiltro")  ? document.getElementById("histAnioFiltro").value  : "";
+
+  var rows = (_indHistorico.rows || []).slice();
+  if (hotelFiltro) rows = rows.filter(function(r) { return String(r.hotel_codigo) === hotelFiltro; });
+  if (anioFiltro)  rows = rows.filter(function(r) { return String(r.anio) === anioFiltro; });
+
+  rows.sort(function(a, b) {
+    var va = a[_histSortKey], vb = b[_histSortKey];
+    if (!isNaN(Number(va)) && !isNaN(Number(vb))) { va = Number(va); vb = Number(vb); }
+    if (va < vb) return _histSortAsc ? -1 :  1;
+    if (va > vb) return _histSortAsc ?  1 : -1;
+    return 0;
+  });
+
+  var countEl = document.getElementById("histCount");
+  if (countEl) countEl.textContent = rows.length + " registro" + (rows.length !== 1 ? "s" : "");
+
+  var tbody = document.getElementById("histTableBody"); if (!tbody) return;
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--textMuted);padding:24px">Sin registros</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function(r) {
+    var cerradoEn = r.cerrado_en ? new Date(r.cerrado_en).toLocaleDateString("es-CO") : "—";
+    return '<tr>' +
+      '<td>' + esc(r.hotel_nombre || "") + '</td>' +
+      '<td>' + (r.anio || "—") + '</td>' +
+      '<td>' + (r.mes  || "—") + '</td>' +
+      '<td>' + (r.occ_real    != null ? (Number(r.occ_real) * 100).toFixed(1) + "%" : "—") + '</td>' +
+      '<td>' + (r.tarifa_real != null ? "$" + _fmtNum_(r.tarifa_real) : "—") + '</td>' +
+      '<td>' + (r.revpar_real != null ? "$" + _fmtNum_(r.revpar_real) : "—") + '</td>' +
+      '<td>' + (r.ing_total   != null ? "$" + _fmtNum_(r.ing_total)   : "—") + '</td>' +
+      '<td style="font-size:.78rem;color:var(--textMuted)">' + cerradoEn + '</td>' +
+    '</tr>';
+  }).join("");
+}
+
+function sortHistorico(key) {
+  if (_histSortKey === key) { _histSortAsc = !_histSortAsc; }
+  else { _histSortKey = key; _histSortAsc = false; }
+  renderHistorico();
+}
+
+// ── Ranking ───────────────────────────────────────────────────
+
+function _renderIndRanking_(rows, metrica) {
+  var container = document.getElementById("indRanking"); if (!container) return;
+  var metricaKey = metrica + "_real";
+  var isPercent  = metrica === "occ";
+  var hotelTotals = {};
+  rows.forEach(function(r) {
+    var k = r.hotel_codigo;
+    if (!hotelTotals[k]) hotelTotals[k] = { nombre: r.hotel_nombre, sum: 0, count: 0 };
+    var v = Number(r[metricaKey]);
+    if (!isNaN(v)) { hotelTotals[k].sum += v; hotelTotals[k].count++; }
+  });
+  var ranked = Object.values(hotelTotals)
+    .map(function(h) { return { nombre: h.nombre, val: h.count ? h.sum / h.count : 0 }; })
+    .sort(function(a, b) { return b.val - a.val; });
+  if (!ranked.length) { container.innerHTML = '<div class="ind-loading-sm" style="padding:12px">Sin datos.</div>'; return; }
+  container.innerHTML = '<div style="padding:12px 14px">' +
+    ranked.slice(0, 8).map(function(h, i) {
+      var valStr = isPercent ? (h.val * 100).toFixed(1) + "%" : "$" + _fmtNum_(h.val);
+      return '<div class="ind-ranking-row">' +
+        '<div class="ind-rank-num">' + (i + 1) + '</div>' +
+        '<div class="ind-rank-name" title="' + esc(h.nombre) + '">' + esc(h.nombre) + '</div>' +
+        '<div class="ind-rank-val">' + valStr + '</div></div>';
+    }).join("") + '</div>';
+}
+
+// ── Cerrar mes modal ──────────────────────────────────────────
+
+function openCerrarMesModal() {
+  var listEl = document.getElementById("cmHotelList");
+  if (listEl) {
+    listEl.innerHTML = _indHoteles.length
+      ? _indHoteles.map(function(h) {
+          return '<label class="cm-hotel-item">' +
+            '<input type="checkbox" class="cm-hotel-chk" ' +
+            'data-codigo="' + esc(h.codigo) + '" ' +
+            'data-nombre="' + esc(h.nombre) + '" ' +
+            'data-ssid="'   + esc(h.ssId)   + '">' +
+            esc(h.nombre) + '</label>';
+        }).join("")
+      : '<div class="ind-loading-sm">Sin hoteles cargados.</div>';
+  }
+
+  var anioActual = new Date().getFullYear();
+  var anios = [anioActual - 1, anioActual, anioActual + 1];
+  var optsAnio = anios.map(function(a) { return '<option value="' + a + '">' + a + '</option>'; }).join("");
+  ["cmAnioInicio","cmAnioFin"].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.innerHTML = optsAnio;
+  });
+
+  var now = new Date(), mes = now.getMonth(), anio = now.getFullYear();
+  if (mes === 0) { mes = 12; anio--; }
+  document.getElementById("cmMesInicio").value  = String(mes);
+  document.getElementById("cmAnioInicio").value = String(anio);
+  document.getElementById("cmMesFin").value     = String(mes);
+  document.getElementById("cmAnioFin").value    = String(anio);
+  document.getElementById("cmTodos").checked    = false;
+  document.querySelectorAll(".cm-hotel-chk").forEach(function(c) { c.checked = false; });
+  document.getElementById("cmResumen").style.display = "none";
+
+  document.querySelectorAll("#cmHotelList input, #cmMesInicio, #cmAnioInicio, #cmMesFin, #cmAnioFin")
+    .forEach(function(el) { el.addEventListener("change", _updateCmResumen_); });
+
+  document.getElementById("cerrarMesModal").style.display = "flex";
+  document.body.classList.add("no-scroll");
+}
+
+function closeCerrarMesModal(e) {
+  if (e && e.target !== document.getElementById("cerrarMesModal")) return;
+  _closeCerrarMesNow_();
+}
+
+function _closeCerrarMesNow_() {
+  document.getElementById("cerrarMesModal").style.display = "none";
+  document.body.classList.remove("no-scroll");
+}
+
+function toggleCmTodos() {
+  var checked = document.getElementById("cmTodos").checked;
+  document.querySelectorAll(".cm-hotel-chk").forEach(function(c) { c.checked = checked; });
+  _updateCmResumen_();
+}
+
+function _updateCmResumen_() {
+  var hoteles = _getCmHotelesSeleccionados_();
+  var meses   = _getCmRangeMeses_();
+  var el = document.getElementById("cmResumen"); if (!el) return;
+  if (!hoteles.length || !meses.length) { el.style.display = "none"; return; }
+  var total = hoteles.length * meses.length;
+  el.style.display = "block";
+  el.textContent = hoteles.length + " hotel" + (hoteles.length > 1 ? "es" : "") +
+    " \u00d7 " + meses.length + " mes" + (meses.length > 1 ? "es" : "") +
+    " = " + total + " operaci\u00f3n" + (total > 1 ? "es" : "");
+}
+
+function _getCmHotelesSeleccionados_() {
+  var result = [];
+  document.querySelectorAll(".cm-hotel-chk:checked").forEach(function(c) {
+    result.push({ codigo: c.getAttribute("data-codigo"), nombre: c.getAttribute("data-nombre"), ssId: c.getAttribute("data-ssid") });
+  });
+  return result;
+}
+
+function _getCmRangeMeses_() {
+  var mInicio = parseInt(document.getElementById("cmMesInicio").value, 10);
+  var aInicio = parseInt(document.getElementById("cmAnioInicio").value, 10);
+  var mFin    = parseInt(document.getElementById("cmMesFin").value,    10);
+  var aFin    = parseInt(document.getElementById("cmAnioFin").value,   10);
+  if (!mInicio || !aInicio || !mFin || !aFin) return [];
+  var result = [], m = mInicio, a = aInicio, limite = 60;
+  while ((a < aFin || (a === aFin && m <= mFin)) && limite-- > 0) {
+    result.push({ mes: m, anio: a });
+    m++; if (m > 12) { m = 1; a++; }
+  }
+  return result;
+}
+
+function ejecutarCerrarMes() {
+  var hoteles = _getCmHotelesSeleccionados_();
+  var meses   = _getCmRangeMeses_();
+  if (!hoteles.length) return showToast("Selecciona al menos un hotel", "error");
+  if (!meses.length)   return showToast("Rango de fechas inv\u00e1lido", "error");
+
+  var saveBtn = document.querySelector("#cerrarMesModal .modal-btn-save");
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<div class="btn-spin"></div> Procesando\u2026'; }
+
+  var cola = [];
+  meses.forEach(function(m) {
+    hoteles.forEach(function(h) { cola.push({ hotel: h, mes: m.mes, anio: m.anio }); });
+  });
+
+  var total = cola.length, ok = 0, errores = 0, idx = 0;
+
+  function _next_() {
+    if (idx >= total) {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Cerrar mes'; }
+      showToast(ok + "/" + total + " operaciones completadas", errores ? "info" : "success");
+      _closeCerrarMesNow_();
+      _indInitialized = false;
+      _indHistorico   = null;
+      if (_currentView === "indicadores") _refreshIndicadores_();
+      return;
+    }
+    var op = cola[idx++];
+    google.script.run
+      .withSuccessHandler(function() { ok++; _next_(); })
+      .withFailureHandler(function()  { errores++; _next_(); })
+      .cerrarMes(op.hotel.codigo, op.hotel.nombre, op.hotel.ssId, op.mes, op.anio);
+  }
+
+  _next_();
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+
+function _avg_(rows, key) {
+  var vals = rows.map(function(r) { return Number(r[key]); }).filter(function(v) { return !isNaN(v); });
+  return vals.length ? vals.reduce(function(a, b) { return a + b; }, 0) / vals.length : null;
+}
+
+function _fmtNum_(n) {
+  if (n === null || n === undefined || isNaN(n)) return "\u2014";
+  if (n >= 1e9) return (n / 1e9).toFixed(1) + "B";
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
+  if (n >= 1e3) return (n / 1e3).toFixed(0) + "K";
+  return Number(n).toFixed(0);
+}
+
+function onIndFilter() { _renderTabActual_(); }
+
+// ── Refresh ───────────────────────────────────────────────────
+
+function _refreshIndicadores_() {
+  var wrap = document.getElementById("indHotelList");
+  if (wrap) wrap.innerHTML = '<div class="ind-loading-sm"><i class="bi bi-arrow-clockwise"></i> Actualizando\u2026</div>';
+  _clearIndCharts_();
+  _indInitialized = false;
+  loadIndicadores();
+}
+</script>

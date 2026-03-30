@@ -1,0 +1,292 @@
+<script>
+// ══════════════════════════════════════════════════════════════
+//  Oxo Partners · Admin · Campañas (Correos)
+// ══════════════════════════════════════════════════════════════
+
+// ── Estado local ───────────────────────────────────────────────
+
+var _selectedRecipients = [];
+var _allRecipients = [];
+var _editorContent = "";
+
+// ── RENDER CAMPANAS ────────────────────────────────────────────
+
+function renderCampanas() {
+  loadCampaignRecipients();
+}
+
+function loadCampaignRecipients() {
+  setStatus("loading");
+  google.script.run
+    .withSuccessHandler(function(recipients) {
+      setStatus("ok");
+      _allRecipients = recipients || [];
+      renderRecipientsList(recipients);
+    })
+    .withFailureHandler(function(err) {
+      setStatus("error");
+      alert("Error: " + _errMsg_(err));
+    })
+    .getCampaignRecipients();
+}
+
+function renderRecipientsList(recipients) {
+  const list = document.getElementById("recipientsList");
+  if (!recipients || !recipients.length) {
+    list.innerHTML = '<div style="padding:16px;color:#999;text-align:center">No hay destinatarios activos</div>';
+    document.getElementById("selectAllCheckbox").disabled = true;
+    return;
+  }
+
+  document.getElementById("selectAllCheckbox").disabled = false;
+  document.getElementById("selectAllCheckbox").checked = false;
+
+  list.innerHTML = recipients.map((r, idx) => `
+    <div class="recipient-item">
+      <input type="checkbox" class="recipient-checkbox" 
+             data-email="${esc(r.correo)}" 
+             data-nombre="${esc(r.nombre || '')}"
+             data-cedula="${esc(r.cedula || '')}"
+             data-idx="${idx}" 
+             onchange="updateSelectedRecipients()">
+      <div class="recipient-info">
+        <div class="recipient-name">${esc(r.nombre || "Sin nombre")}</div>
+        <div class="recipient-email">${esc(r.correo)}</div>
+      </div>
+    </div>
+  `).join("");
+
+  updateSelectedRecipients();
+}
+
+function toggleSelectAll() {
+  const allChecked = document.getElementById("selectAllCheckbox").checked;
+  document.querySelectorAll(".recipient-checkbox").forEach(cb => {
+    cb.checked = allChecked;
+  });
+  updateSelectedRecipients();
+}
+
+function updateSelectedRecipients() {
+  const checkboxes = document.querySelectorAll(".recipient-checkbox:checked");
+  const count = checkboxes.length;
+  document.getElementById("selectedCount").textContent = count > 0 ? `(${count} seleccionados)` : "";
+  
+  _selectedRecipients = Array.from(checkboxes).map(cb => ({
+    correo: cb.dataset.email,
+    nombre: cb.dataset.nombre,
+    cedula: cb.dataset.cedula
+  }));
+}
+
+// ── EMAIL COMPOSER ────────────────────────────────────────────
+
+function openEmailComposer() {
+  if (!_selectedRecipients.length) {
+    alert("Por favor selecciona al menos un destinatario");
+    return;
+  }
+
+  document.getElementById("emailSubject").value = "";
+  _editorContent = "";
+  clearEditor();
+  loadTemplate("standard");
+  
+  document.getElementById("emailComposerModal").style.display = "flex";
+  document.body.classList.add("no-scroll");
+}
+
+function closeEmailComposer() {
+  document.getElementById("emailComposerModal").style.display = "none";
+  document.body.classList.remove("no-scroll");
+}
+
+function clearEditor() {
+  document.getElementById("emailEditor").innerHTML = "";
+  _editorContent = "";
+  updateEditorContent();
+}
+
+function loadTemplate(templateType) {
+  const templates = {
+    standard: {
+      subject: "Comunicado de OxoHotel",
+      content: `<p>Hola <strong>{nombre}</strong>,</p>
+<p>Te escribimos desde OxoHotel con noticias importantes.</p>
+<p>Estamos comprometidos en ofrecerte la mejor experiencia.</p>
+<p>Si tienes dudas, no dudes en contactarnos.</p>
+<p><br></p>
+<p>Saludos cordiales,<br><strong>Equipo OxoHotel</strong></p>`
+    },
+    promo: {
+      subject: "¡Ofertas especiales exclusivas para ti!",
+      content: `<p>¡Hola <strong>{nombre}</strong>!</p>
+<p>Tenemos ofertas increíbles pensadas especialmente para ti.</p>
+<h3>Beneficios exclusivos:</h3>
+<ul>
+<li>Descuentos hasta el 30%</li>
+<li>Acceso prioritario a nuevas propiedades</li>
+<li>Upgrade de cortesía en tu próxima estadía</li>
+</ul>
+<p><strong>Válido hasta el 31 de diciembre de 2025.</strong></p>
+<p><br></p>
+<p>Saludos,<br><strong>OxoHotel</strong></p>`
+    },
+    event: {
+      subject: "¡Te invitamos a nuestro próximo evento!",
+      content: `<p>Hola <strong>{nombre}</strong>,</p>
+<p>Nos complace invitarte a un evento exclusivo.</p>
+<h3>Detalles:</h3>
+<ul>
+<li><strong>Fecha:</strong> [Completa la fecha]</li>
+<li><strong>Hora:</strong> [Completa la hora]</li>
+<li><strong>Lugar:</strong> [Completa la ubicación]</li>
+</ul>
+<p>Esperamos tu participación.</p>
+<p><br></p>
+<p>Saludos,<br><strong>OxoHotel</strong></p>`
+    }
+  };
+
+  const tmpl = templates[templateType] || templates.standard;
+  document.getElementById("emailSubject").value = tmpl.subject;
+  document.getElementById("emailEditor").innerHTML = tmpl.content;
+  updateEditorContent();
+}
+
+// ── EDITOR TOOLBAR ────────────────────────────────────────────
+
+function setupEditorToolbar() {
+  const editor = document.getElementById("emailEditor");
+  const boldBtn = document.getElementById("bold-btn");
+  const italicBtn = document.getElementById("italic-btn");
+  const underlineBtn = document.getElementById("underline-btn");
+  const listBtn = document.getElementById("list-btn");
+  const linkBtn = document.getElementById("link-btn");
+  const templateBtn = document.getElementById("template-btn");
+
+  editor.addEventListener("input", updateEditorContent);
+  editor.addEventListener("focus", function() {
+    editor.style.borderColor = "#b45309";
+  });
+  editor.addEventListener("blur", function() {
+    editor.style.borderColor = "#ddd";
+  });
+
+  boldBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    applyFormat("bold");
+  });
+
+  italicBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    applyFormat("italic");
+  });
+
+  underlineBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    applyFormat("underline");
+  });
+
+  listBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    applyFormat("insertUnorderedList");
+  });
+
+  linkBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const url = prompt("Ingresa la URL (ej: https://ejemplo.com):");
+    if (url) {
+      const selected = window.getSelection();
+      if (selected.toString()) {
+        applyFormat("createLink", url);
+      } else {
+        alert("Por favor selecciona el texto que deseas convertir en enlace");
+      }
+    }
+  });
+
+  templateBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    insertVariable();
+  });
+}
+
+function updateEditorContent() {
+  _editorContent = document.getElementById("emailEditor").innerHTML;
+}
+
+function applyFormat(command, value) {
+  document.execCommand(command, false, value || null);
+  document.getElementById("emailEditor").focus();
+  updateEditorContent();
+}
+
+function insertVariable() {
+  const options = "{nombre}, {cedula}, {hotel}";
+  const varName = prompt(`Ingresa la variable a insertar:\n\n${options}`);
+  if (varName && /^\{(nombre|cedula|hotel)\}$/.test(varName.trim())) {
+    applyFormat("insertText", varName.trim());
+  } else if (varName) {
+    alert("Variable no válida. Usa: {nombre}, {cedula} o {hotel}");
+  }
+}
+
+// ── SEND CAMPAIGN ────────────────────────────────────────────
+
+function sendCampaign() {
+  const asunto = document.getElementById("emailSubject").value.trim();
+  const contenido = document.getElementById("emailEditor").innerHTML;
+
+  if (!asunto) {
+    alert("Por favor ingresa un asunto");
+    return;
+  }
+
+  if (!contenido.trim() || contenido === "<br>") {
+    alert("Por favor escribe el contenido del correo");
+    return;
+  }
+
+  const confirmMsg = `¿Enviar a ${_selectedRecipients.length} destinatario(s)?\n\nAsunto: ${asunto}`;
+  if (!confirm(confirmMsg)) {
+    return;
+  }
+
+  const btn = document.getElementById("sendEmailBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<span>Enviando…</span><div class="btn-spin" style="margin-left:8px;display:inline-block"></div>';
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-send"></i> Enviar a seleccionados';
+
+      if (result.errors && result.errors.length > 0) {
+        alert(`✓ Campaña enviada (parcialmente)\n\nEnviados: ${result.sentCount}/${result.totalRequested}\nErrores: ${result.errors.length}`);
+      } else {
+        alert(`✓ Campaña enviada exitosamente\n\nEnviados: ${result.sentCount}/${result.totalRequested}`);
+      }
+      
+      closeEmailComposer();
+    })
+    .withFailureHandler(function(err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-send"></i> Enviar a seleccionados';
+      alert("Error: " + _errMsg_(err));
+    })
+    .sendCampaignEmails({
+      asunto: asunto,
+      htmlContent: contenido,
+      recipients: _selectedRecipients,
+      attachPDF: false
+    });
+}
+
+// ── Init ────────────────────────────────────────────────────────
+
+setTimeout(function() {
+  setupEditorToolbar();
+}, 100);
+
+</script>

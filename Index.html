@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oxo Partners · Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <?!= include_("Style") ?>
+  <style id="emailComposerStyles"></style>
+  <!-- Confirm modal + mobile fixes -->
+  <style>
+    /* ── Confirm modal ─────────────────────────── */
+    .modal-card-sm {
+      max-width: 420px;
+    }
+
+    .confirm-icon-wrap {
+      text-align: center;
+      margin: 4px 0 16px;
+    }
+
+    .confirm-icon {
+      font-size: 2.2rem;
+      color: #b45309;
+    }
+
+    .confirm-msg {
+      text-align: center;
+      color: #444;
+      font-size: .97rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .modal-btn-danger {
+      background: #b91c1c;
+      color: #fff;
+      border: none;
+    }
+
+    .modal-btn-danger:hover {
+      background: #991b1b;
+    }
+
+    /* ── Mobile scroll fix ─────────────────────── */
+    body.no-scroll {
+      overflow: hidden;
+    }
+
+    /* Drawer y modales: scroll interno en móvil */
+    @media (max-width: 768px) {
+      .drawer-panel {
+        max-height: 92vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .modal-card {
+        max-height: 90vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen">
+    <div class="login-wave-bg"></div>
+    <div class="login-wave"><span></span><span></span><span></span></div>
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="login-brand">
+          <div class="login-logo"><i class="bi bi-buildings"></i></div>
+          <div>
+            <div class="login-brand-name">OxoHotel</div>
+            <div class="login-brand-sub">Panel de administración · Oxo Partners</div>
+          </div>
+        </div>
+        <div class="login-divider"></div>
+        <div class="login-field">
+          <label class="login-label">Contraseña de acceso</label>
+          <div class="login-input-wrap">
+            <i class="bi bi-lock"></i>
+            <input type="password" id="loginPwd" class="login-input" placeholder="Ingresa la contraseña" autocomplete="current-password">
+            <button type="button" id="loginToggle" class="login-toggle" aria-label="Ver contraseña">
+            <i class="bi bi-eye"></i>
+          </button>
+          </div>
+        </div>
+        <div id="loginError" class="login-error" style="display:none">
+          <i class="bi bi-exclamation-triangle"></i> Contraseña incorrecta.
+        </div>
+        <button id="loginBtn" class="login-btn" onclick="handleLogin()">
+        <span>Ingresar</span><i class="bi bi-arrow-right"></i>
+      </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN SHELL -->
+  <div id="adminShell" style="display:none">
+
+    <aside class="sidebar" id="sidebar" onmouseenter="hoverOpenSidebar()" onmouseleave="hoverCloseSidebar()">
+      <div class="sidebar-brand">
+        <div class="sidebar-logo"><i class="bi bi-buildings"></i></div>
+        <div class="sidebar-brand-text">
+          <div class="sidebar-brand-name">Oxo Partners</div>
+          <div class="sidebar-brand-sub">Panel de administración</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Principal</div>
+        <a class="nav-item active" data-view="resumen" onclick="navigate('resumen')">
+          <i class="bi bi-grid-1x2"></i><span>Resumen</span>
+        </a>
+        <a class="nav-item" data-view="registros" onclick="navigate('registros')">
+          <i class="bi bi-people"></i><span>Registros</span>
+        </a>
+        <a class="nav-item" data-view="hoteles" onclick="navigate('hoteles')">
+          <i class="bi bi-building"></i><span>Hoteles</span>
+        </a>
+        <div class="nav-section-label" style="margin-top:12px">Análisis</div>
+        <a class="nav-item" data-view="actividad" onclick="navigate('actividad')">
+          <i class="bi bi-activity"></i><span>Actividad</span>
+        </a>
+        <a class="nav-item" data-view="indicadores" onclick="navigate('indicadores')">
+          <i class="bi bi-graph-up"></i><span>Indicadores</span>
+        </a>
+        <div class="nav-section-label" style="margin-top:12px">Comunicación</div>
+        <a class="nav-item" data-view="campanas" onclick="navigate('campanas')">
+          <i class="bi bi-envelope"></i><span>Campañas</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-status-row">
+          <div class="sidebar-status">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Cargando…</span>
+          </div>
+          <button class="sidebar-refresh-btn" onclick="refreshData()" title="Actualizar datos">
+          <i class="bi bi-arrow-clockwise" id="refreshIcon"></i>
+        </button>
+        </div>
+        <div class="sidebar-updated" id="sidebarUpdated"></div>
+        <button class="sidebar-logout" onclick="handleLogout()">
+        <i class="bi bi-box-arrow-left"></i><span>Cerrar sesión</span>
+      </button>
+      </div>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <main class="main-content" id="mainContent">
+
+      <div class="topbar">
+        <button class="topbar-menu" onclick="toggleSidebar()" aria-label="Menú">
+        <i class="bi bi-list"></i>
+      </button>
+        <div class="topbar-title" id="topbarTitle">Resumen</div>
+        <div class="topbar-right">
+          <div class="topbar-user">
+            <div class="topbar-avatar">A</div>
+            <span class="topbar-user-name">Admin</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="globalLoader" class="global-loader" style="display:none">
+        <div class="loader-card">
+          <div class="loader-spin"></div>
+          <div class="loader-text">Cargando datos…</div>
+        </div>
+      </div>
+
+      <!-- RESUMEN -->
+      <div id="view-resumen" class="view" style="display:none">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Resumen</h1>
+            <p class="view-sub">Visión general de registros</p>
+          </div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-total">
+            <div class="kpi-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-value" id="kpiTotal">—</div>
+              <div class="kpi-label">Total registros</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-active">
+            <div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-value" id="kpiActivos">—</div>
+              <div class="kpi-label">Comunicación activa</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-bajas">
+            <div class="kpi-icon"><i class="bi bi-person-dash-fill"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-value" id="kpiBajas">—</div>
+              <div class="kpi-label">Bajas / inactivos</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-time">
+            <div class="kpi-icon"><i class="bi bi-clock-history"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-value kpi-value-sm" id="kpiUpdated">—</div>
+              <div class="kpi-label">Última actualización</div>
+            </div>
+          </div>
+        </div>
+        <div class="section-row">
+          <div class="panel panel-wide">
+            <div class="panel-head">
+              <span class="panel-title"><i class="bi bi-bar-chart-line"></i> Registros — últimos 7 días</span>
+            </div>
+            <div class="chart-wrap" id="chart7dias"></div>
+          </div>
+          <div class="panel panel-narrow">
+            <div class="panel-head"><span class="panel-title"><i class="bi bi-building"></i> Top hoteles</span></div>
+            <div id="hotelesResumen" class="bar-list"></div>
+          </div>
+        </div>
+        <div class="quick-actions">
+          <button class="qa-btn" onclick="navigate('registros')"><i class="bi bi-people"></i> Ir a Registros</button>
+          <button class="qa-btn" onclick="navigate('hoteles')"><i class="bi bi-building"></i> Ver Hoteles</button>
+          <button class="qa-btn" onclick="navigate('actividad')"><i class="bi bi-activity"></i> Ver Actividad</button>
+        </div>
+      </div>
+
+      <!-- REGISTROS -->
+      <div id="view-registros" class="view" style="display:none">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Registros</h1>
+            <p class="view-sub">Listado y gestión</p>
+          </div>
+          <div class="header-actions">
+            <div class="export-dropdown-wrap" id="exportDropdownWrap">
+              <button class="action-btn" id="exportDropdownBtn" onclick="toggleExportDropdown()">
+              <i class="bi bi-download"></i> Exportar
+              <i class="bi bi-chevron-down" id="exportChevron" style="margin-left:2px;font-size:.75rem"></i>
+            </button>
+              <div class="export-dropdown-panel" id="exportDropdownPanel" style="display:none">
+                <div class="export-section-label">Todos / filtrados</div>
+                <button class="export-opt" onclick="exportCSV();closeExportDropdown()"><i class="bi bi-filetype-csv"></i> CSV</button>
+                <button class="export-opt" onclick="exportXLSX();closeExportDropdown()"><i class="bi bi-file-earmark-spreadsheet"></i> Excel</button>
+                <button class="export-opt" onclick="exportPDF();closeExportDropdown()"><i class="bi bi-file-pdf"></i> PDF</button>
+                <div class="export-divider"></div>
+                <div class="export-section-label">Seleccionados</div>
+                <button class="export-opt" onclick="exportSelectedCSV()"><i class="bi bi-filetype-csv"></i> CSV (seleccionados)</button>
+                <button class="export-opt" onclick="exportSelectedXLSX()"><i class="bi bi-file-earmark-spreadsheet"></i> Excel (seleccionados)</button>
+                <button class="export-opt" onclick="exportSelectedPDF()"><i class="bi bi-file-pdf"></i> PDF (seleccionados)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="reg-toolbar">
+          <div class="search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="text" id="regSearch" class="search-input" placeholder="Buscar nombre, correo, teléfono, cédula…" oninput="onRegSearch()">
+            <button class="search-clear" id="regSearchClear" onclick="clearRegSearch()" style="display:none"><i class="bi bi-x"></i></button>
+          </div>
+          <div class="filter-row">
+            <div class="filter-dropdown-wrap" id="estadoDropdownWrap">
+              <button class="filter-hotels-btn" id="estadoFilterBtn" onclick="toggleEstadoDropdown()">
+              <i class="bi bi-funnel"></i><span id="estadoFilterLabel">Todos</span><i class="bi bi-chevron-down" id="estadoFilterChevron"></i>
+            </button>
+              <div class="filter-dropdown-panel" id="estadoDropdownPanel" style="display:none">
+                <label class="fdd-item"><input type="radio" name="estadoRadio" value="" checked onchange="setEstadoFilter('')"><span>Todos</span></label>
+                <label class="fdd-item"><input type="radio" name="estadoRadio" value="activo" onchange="setEstadoFilter('activo')"><span>Activo</span></label>
+                <label class="fdd-item"><input type="radio" name="estadoRadio" value="baja" onchange="setEstadoFilter('baja')"><span>Baja</span></label>
+              </div>
+            </div>
+            <div class="filter-dropdown-wrap" id="dateDropdownWrap">
+              <button class="filter-hotels-btn" id="dateFilterBtn" onclick="toggleDateFilter()">
+              <i class="bi bi-calendar-range"></i><span id="dateFilterLabel">Todas las fechas</span><i class="bi bi-chevron-down" id="dateFilterChevron"></i>
+            </button>
+              <div class="filter-dropdown-panel filter-date-panel" id="dateDropdownPanel" style="display:none">
+                <div class="date-presets">
+                  <button class="date-preset-btn" onclick="applyDatePreset('hoy')">Hoy</button>
+                  <button class="date-preset-btn" onclick="applyDatePreset('7d')">Últimos 7 días</button>
+                  <button class="date-preset-btn" onclick="applyDatePreset('30d')">Últimos 30 días</button>
+                  <button class="date-preset-btn" onclick="applyDatePreset('mes')">Este mes</button>
+                </div>
+                <div class="date-range-inputs">
+                  <div class="date-field"><label class="date-field-label">Desde</label><input type="date" id="dateFrom" class="date-input">
+                  </div>
+                  <div class="date-field"><label class="date-field-label">Hasta</label><input type="date" id="dateTo" class="date-input">
+                  </div>
+                </div>
+                <div class="date-actions">
+                  <button class="hfp-btn" onclick="clearDateFilter()">Limpiar</button>
+                  <button class="hfp-btn hfp-btn-apply" onclick="applyDateFilter()">Aplicar</button>
+                </div>
+              </div>
+            </div>
+            <button class="filter-hotels-btn" id="hotelFilterBtn" onclick="toggleHotelFilter()">
+            <i class="bi bi-building"></i><span id="hotelFilterLabel">Todas las propiedades</span><i class="bi bi-chevron-down" id="hotelFilterChevron"></i>
+          </button>
+          </div>
+          <div class="active-filters-row" id="activeFiltersRow" style="display:none"></div>
+        </div>
+
+        <div class="hotel-filter-panel" id="hotelFilterPanel" style="display:none">
+          <div class="hfp-head">
+            <span class="hfp-title">Filtrar por propiedad</span>
+            <div class="hfp-actions">
+              <button onclick="selectAllHotels()" class="hfp-btn">Todas</button>
+              <button onclick="clearAllHotels()" class="hfp-btn">Ninguna</button>
+              <button onclick="applyHotelFilter()" class="hfp-btn hfp-btn-apply">Aplicar</button>
+            </div>
+          </div>
+          <div class="hfp-search"><i class="bi bi-search"></i><input type="text" id="hfpSearch" class="hfp-search-input" placeholder="Buscar propiedad…" oninput="filterHfpList()">
+          </div>
+          <div class="hfp-list" id="hfpList"></div>
+        </div>
+
+        <!-- BULK BAR (sin botón eliminar) -->
+        <div class="bulk-bar" id="bulkBar" style="display:none">
+          <span class="bulk-count" id="bulkCount">0 seleccionados</span>
+          <div class="bulk-actions">
+            <button class="bulk-btn bulk-activate" onclick="bulkAction('activar')"><i class="bi bi-check-circle"></i> Activar</button>
+            <button class="bulk-btn bulk-deactivate" onclick="bulkAction('desactivar')"><i class="bi bi-person-dash"></i> Dar de baja</button>
+            <button class="bulk-btn bulk-export-csv" onclick="exportSelectedCSV()"><i class="bi bi-download"></i> Exportar</button>
+            <button class="bulk-btn bulk-deselect" onclick="deselectAll()"><i class="bi bi-x"></i> Deseleccionar</button>
+          </div>
+        </div>
+
+        <div class="table-wrap" id="tableWrap">
+          <table class="data-table" id="tablaRegistros">
+            <thead>
+              <tr>
+                <th style="width:38px"><input type="checkbox" id="checkAll" onchange="toggleCheckAll()"></th>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th class="col-hide-sm">Teléfono</th>
+                <th>Propiedad</th>
+                <th>Estado</th>
+                <th class="col-hide-md">Sincronizado</th>
+                <th style="width:38px"></th>
+              </tr>
+            </thead>
+            <tbody id="tablaBody"></tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <div class="pagination-info"><span id="tablaCount" class="table-count"></span></div>
+          <div class="pagination-controls">
+            <div class="page-size-wrap">
+              <span class="page-size-label">Mostrar</span>
+              <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize()">
+              <option value="10">10</option><option value="25" selected>25</option>
+              <option value="50">50</option><option value="100">100</option>
+            </select>
+            </div>
+            <div class="page-nav" id="pageNav"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOTELES -->
+      <div id="view-hoteles" class="view" style="display:none">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Hoteles</h1>
+            <p class="view-sub">Concentración por propiedad</p>
+          </div>
+        </div>
+        <div class="kpi-grid kpi-grid-3">
+          <div class="kpi-card kpi-total">
+            <div class="kpi-icon"><i class="bi bi-buildings-fill"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-value" id="kpiPropUniq">—</div>
+              <div class="kpi-label">Propiedades con registros</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-active">
+            <div class="kpi-icon"><i class="bi bi-link-45deg"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-value" id="kpiVinculos">—</div>
+              <div class="kpi-label">Vínculos totales</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-bajas">
+            <div class="kpi-icon"><i class="bi bi-trophy-fill"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-value kpi-value-sm" id="kpiTop1">—</div>
+              <div class="kpi-label">Propiedad líder</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title"><i class="bi bi-bar-chart-fill"></i> Registros por propiedad</span>
+          </div>
+          <div id="hotelesBarras" class="hotel-bars"></div>
+        </div>
+      </div>
+
+      <!-- ACTIVIDAD -->
+      <div id="view-actividad" class="view" style="display:none">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Actividad</h1>
+            <p class="view-sub">Señales y tendencias</p>
+          </div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-total">
+            <div class="kpi-icon"><i class="bi bi-calendar-check"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-value" id="kpiHoy">—</div>
+              <div class="kpi-label">Nuevos hoy</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-active">
+            <div class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-value" id="kpiNuevos7">—</div>
+              <div class="kpi-label">Últimos 7 días</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-bajas">
+            <div class="kpi-icon"><i class="bi bi-calendar3"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-value" id="kpiNuevos30">—</div>
+              <div class="kpi-label">Últimos 30 días</div>
+            </div>
+          </div>
+          <div class="kpi-card kpi-time">
+            <div class="kpi-icon"><i class="bi bi-arrow-up-right"></i></div>
+            <div class="kpi-content">
+              <div class="kpi-value" id="kpiTendencia">—</div>
+              <div class="kpi-label">Tendencia 7d</div>
+            </div>
+          </div>
+        </div>
+        <div class="section-row">
+          <div class="panel panel-wide">
+            <div class="panel-head">
+              <span class="panel-title"><i class="bi bi-bar-chart-line"></i> Nuevos registros — últimos 7 días</span>
+            </div>
+            <div class="chart-wrap" id="chartActividad"></div>
+          </div>
+          <div class="panel panel-narrow">
+            <div class="panel-head">
+              <span class="panel-title"><i class="bi bi-building"></i> Top hoteles (activos)</span>
+            </div>
+            <div id="hotelesActividad" class="bar-list"></div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:20px">
+          <div class="panel-head">
+            <span class="panel-title"><i class="bi bi-cloud-arrow-up"></i> Estado de sincronización</span>
+          </div>
+          <div id="syncStats" class="sync-grid"></div>
+        </div>
+      </div>
+      <!-- INDICADORES -->
+      <div id="view-indicadores" class="view" style="display:none">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Indicadores</h1>
+            <p class="view-sub">Performance hotelera — histórico y comparativas</p>
+          </div>
+          <div class="view-header-actions">
+            <button class="btn-cerrar-mes" onclick="openCerrarMesModal()">
+              <i class="bi bi-calendar-check"></i> Cerrar mes
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabs de indicadores -->
+        <div class="ind-tabs">
+          <button class="ind-tab active" data-tab="mensual"     onclick="switchIndTab('mensual')">    <i class="bi bi-calendar3"></i>       Mensual</button>
+          <button class="ind-tab"        data-tab="indicadores" onclick="switchIndTab('indicadores')"><i class="bi bi-graph-up-arrow"></i>   Indicadores</button>
+          <button class="ind-tab"        data-tab="comparativa" onclick="switchIndTab('comparativa')"><i class="bi bi-diagram-3"></i>        Comparativa</button>
+          <button class="ind-tab"        data-tab="historico"   onclick="switchIndTab('historico')">  <i class="bi bi-table"></i>            Histórico</button>
+        </div>
+
+        <!-- TAB: MENSUAL -->
+        <div class="ind-tab-panel" id="ind-panel-mensual">
+
+          <!-- Filter bar: hotel search-select + year chips + month strip -->
+          <div class="ind-filter-bar">
+            <div class="ind-filter-row">
+              <div class="ind-hotel-search-wrap" id="menHotelWrap">
+                <i class="bi bi-building ind-hotel-search-icon"></i>
+                <button type="button" class="ind-hotel-search-btn" id="menHotelBtn"
+                        onclick="_toggleMenHotelDropdown_()">
+                  <span id="menHotelLabel">Selecciona hotel</span>
+                  <i class="bi bi-chevron-down ind-hotel-search-caret"></i>
+                </button>
+                <div class="ind-hotel-dropdown" id="menHotelDropdown">
+                  <input type="text" class="ind-hotel-search-input" id="menHotelSearchInput"
+                         placeholder="Buscar hotel…" autocomplete="off"
+                         oninput="_filterMenHotelOptions_(this.value)">
+                  <div class="ind-hotel-options" id="menHotelOptions"></div>
+                </div>
+                <input type="hidden" id="menHotel" value="">
+              </div>
+              <div class="ind-year-chips" id="menYearChips"></div>
+            </div>
+            <div class="ind-month-strip" id="menMonthStrip"></div>
+          </div>
+
+          <!-- KPI grid con deltas vs año anterior -->
+          <div class="kpi-grid kpi-grid-4" id="menKpiGrid">
+            <div class="kpi-card kpi-total">
+              <div class="kpi-icon"><i class="bi bi-moon-stars-fill"></i></div>
+              <div class="kpi-content">
+                <div class="kpi-value" id="menKpiOcc">—</div>
+                <div class="kpi-label">Ocupación real</div>
+                <div id="menKpiOccDelta"></div>
+              </div>
+            </div>
+            <div class="kpi-card kpi-active">
+              <div class="kpi-icon"><i class="bi bi-tag-fill"></i></div>
+              <div class="kpi-content">
+                <div class="kpi-value" id="menKpiTarifa">—</div>
+                <div class="kpi-label">Tarifa real</div>
+                <div id="menKpiTarifaDelta"></div>
+              </div>
+            </div>
+            <div class="kpi-card kpi-bajas">
+              <div class="kpi-icon"><i class="bi bi-bar-chart-fill"></i></div>
+              <div class="kpi-content">
+                <div class="kpi-value" id="menKpiRevpar">—</div>
+                <div class="kpi-label">RevPAR real</div>
+                <div id="menKpiRevparDelta"></div>
+              </div>
+            </div>
+            <div class="kpi-card kpi-time">
+              <div class="kpi-icon"><i class="bi bi-cash-stack"></i></div>
+              <div class="kpi-content">
+                <div class="kpi-value" id="menKpiIngresos">—</div>
+                <div class="kpi-label">Ingresos totales</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Gráfica Real vs Ppto vs Año ant (OCC / Tarifa / RevPAR) -->
+          <div class="panel" style="margin-bottom:16px">
+            <div class="panel-head">
+              <span class="panel-title"><i class="bi bi-bar-chart-fill"></i> Real vs Presupuesto vs Año anterior</span>
+              <div class="ind-legend" id="menLegend"></div>
+            </div>
+            <div id="menChart" class="ind-chart-container"></div>
+          </div>
+
+          <!-- Composición de ingresos -->
+          <div class="panel" style="margin-bottom:20px">
+            <div class="panel-head">
+              <span class="panel-title"><i class="bi bi-pie-chart-fill"></i> Composición de ingresos</span>
+              <div class="ind-legend" id="menIngLegend"></div>
+            </div>
+            <div id="menChartIngresos" class="ind-chart-container" style="height:auto;min-height:160px"></div>
+          </div>
+
+          <div id="menEmpty" class="ind-empty" style="display:none">
+            <i class="bi bi-calendar-x"></i>
+            <p>Sin datos para este mes.<br>Selecciona otro mes o usa <strong>Cerrar mes</strong>.</p>
+          </div>
+        </div>
+
+        <!-- TAB: INDICADORES -->
+        <div class="ind-tab-panel" id="ind-panel-indicadores" style="display:none">
+
+          <!-- Filter bar: hotel search-select + year chips -->
+          <div class="ind-filter-bar">
+            <div class="ind-filter-row">
+              <div class="ind-hotel-search-wrap" id="anuHotelWrap">
+                <i class="bi bi-building ind-hotel-search-icon"></i>
+                <button type="button" class="ind-hotel-search-btn" id="anuHotelBtn"
+                        onclick="_toggleAnuHotelDropdown_()">
+                  <span id="anuHotelLabel">Selecciona hotel</span>
+                  <i class="bi bi-chevron-down ind-hotel-search-caret"></i>
+                </button>
+                <div class="ind-hotel-dropdown" id="anuHotelDropdown">
+                  <input type="text" class="ind-hotel-search-input" id="anuHotelSearchInput"
+                         placeholder="Buscar hotel…" autocomplete="off"
+                         oninput="_filterAnuHotelOptions_(this.value)">
+                  <div class="ind-hotel-options" id="anuHotelOptions"></div>
+                </div>
+                <input type="hidden" id="anuHotel" value="">
+              </div>
+              <div class="ind-year-chips" id="anuYearChips"></div>
+            </div>
+          </div>
+
+          <!-- KPI grid con deltas vs año anterior -->
+          <div class="kpi-grid kpi-grid-4" id="anuKpiGrid">
+            <div class="kpi-card kpi-total">
+              <div class="kpi-icon"><i class="bi bi-moon-stars-fill"></i></div>
+              <div class="kpi-content">
+                <div class="kpi-value" id="anuKpiOcc">—</div>
+                <div class="kpi-label">Occ prom. anual</div>
+                <div id="anuKpiOccDelta"></div>
+              </div>
+            </div>
+            <div class="kpi-card kpi-active">
+              <div class="kpi-icon"><i class="bi bi-tag-fill"></i></div>
+              <div class="kpi-content">
+                <div class="kpi-value" id="anuKpiTarifa">—</div>
+                <div class="kpi-label">Tarifa prom. anual</div>
+                <div id="anuKpiTarifaDelta"></div>
+              </div>
+            </div>
+            <div class="kpi-card kpi-bajas">
+              <div class="kpi-icon"><i class="bi bi-bar-chart-fill"></i></div>
+              <div class="kpi-content">
+                <div class="kpi-value" id="anuKpiRevpar">—</div>
+                <div class="kpi-label">RevPAR prom. anual</div>
+                <div id="anuKpiRevparDelta"></div>
+              </div>
+            </div>
+            <div class="kpi-card kpi-time">
+              <div class="kpi-icon"><i class="bi bi-cash-stack"></i></div>
+              <div class="kpi-content">
+                <div class="kpi-value" id="anuKpiIngresos">—</div>
+                <div class="kpi-label">Ingresos anuales</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tres gráficas de líneas independientes -->
+          <div class="panel" style="margin-bottom:16px">
+            <div class="panel-head">
+              <span class="panel-title"><i class="bi bi-moon-stars"></i> Ocupación — mes a mes</span>
+              <div class="ind-legend" id="anuOccLegend"></div>
+            </div>
+            <div id="anuChartOcc" class="ind-chart-container"></div>
+          </div>
+          <div class="panel" style="margin-bottom:16px">
+            <div class="panel-head">
+              <span class="panel-title"><i class="bi bi-tag"></i> Tarifa Promedio — mes a mes</span>
+              <div class="ind-legend" id="anuTarifaLegend"></div>
+            </div>
+            <div id="anuChartTarifa" class="ind-chart-container"></div>
+          </div>
+          <div class="panel" style="margin-bottom:20px">
+            <div class="panel-head">
+              <span class="panel-title"><i class="bi bi-bar-chart"></i> RevPAR — mes a mes</span>
+              <div class="ind-legend" id="anuRevparLegend"></div>
+            </div>
+            <div id="anuChartRevpar" class="ind-chart-container"></div>
+          </div>
+
+          <div id="anuEmpty" class="ind-empty" style="display:none">
+            <i class="bi bi-calendar-x"></i>
+            <p>Sin datos para este año.<br>Usa <strong>Cerrar mes</strong> para comenzar.</p>
+          </div>
+        </div>
+
+        <!-- TAB: COMPARATIVA -->
+        <div class="ind-tab-panel" id="ind-panel-comparativa" style="display:none">
+          <div class="ind-controls">
+            <div class="ind-control-group" style="flex:1">
+              <label class="ind-label">Hoteles</label>
+              <div class="ind-hotel-list" id="indHotelList">
+                <div class="ind-loading-sm">Cargando…</div>
+              </div>
+            </div>
+            <div class="ind-control-group">
+              <label class="ind-label">Año</label>
+              <select class="ind-select" id="cmpAnio" onchange="renderComparativa()"></select>
+            </div>
+            <div class="ind-control-group">
+              <label class="ind-label">Métrica</label>
+              <select class="ind-select" id="cmpMetrica" onchange="renderComparativa()">
+                <option value="occ">Ocupación</option>
+                <option value="tarifa">Tarifa Promedio</option>
+                <option value="revpar">RevPAR</option>
+              </select>
+            </div>
+          </div>
+          <div class="panel" style="margin-bottom:20px">
+            <div class="panel-head">
+              <span class="panel-title" id="cmpChartTitle"><i class="bi bi-diagram-3"></i> Comparativa hoteles</span>
+              <div class="ind-legend" id="cmpLegend"></div>
+            </div>
+            <div id="cmpChart" class="ind-chart-container"></div>
+          </div>
+          <div class="section-row">
+            <div class="panel panel-wide">
+              <div class="panel-head"><span class="panel-title"><i class="bi bi-layers-fill"></i> Composición de ingresos</span></div>
+              <div id="cmpChartIngresos" class="ind-chart-container"></div>
+            </div>
+            <div class="panel panel-narrow">
+              <div class="panel-head"><span class="panel-title"><i class="bi bi-trophy-fill"></i> Ranking hoteles</span></div>
+              <div id="indRanking" class="bar-list"></div>
+            </div>
+          </div>
+          <div id="cmpEmpty" class="ind-empty" style="display:none">
+            <i class="bi bi-database-slash"></i>
+            <p>Sin datos históricos.<br>Usa <strong>Cerrar mes</strong> para comenzar.</p>
+          </div>
+        </div>
+
+        <!-- TAB: HISTÓRICO -->
+        <div class="ind-tab-panel" id="ind-panel-historico" style="display:none">
+          <div class="ind-controls">
+            <div class="ind-control-group">
+              <label class="ind-label">Hotel</label>
+              <select class="ind-select" id="histHotelFiltro" onchange="renderHistorico()">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div class="ind-control-group">
+              <label class="ind-label">Año</label>
+              <select class="ind-select" id="histAnioFiltro" onchange="renderHistorico()">
+                <option value="">Todos</option>
+              </select>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title"><i class="bi bi-table"></i> Registros históricos</span>
+              <span class="ind-hist-count" id="histCount"></span>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="histTable">
+                <thead>
+                  <tr>
+                    <th onclick="sortHistorico('hotel_nombre')">Hotel <i class="bi bi-arrow-down-up"></i></th>
+                    <th onclick="sortHistorico('anio')">Año <i class="bi bi-arrow-down-up"></i></th>
+                    <th onclick="sortHistorico('mes_num')">Mes <i class="bi bi-arrow-down-up"></i></th>
+                    <th onclick="sortHistorico('occ_real')">Occ Real <i class="bi bi-arrow-down-up"></i></th>
+                    <th onclick="sortHistorico('tarifa_real')">Tarifa Real <i class="bi bi-arrow-down-up"></i></th>
+                    <th onclick="sortHistorico('revpar_real')">RevPAR <i class="bi bi-arrow-down-up"></i></th>
+                    <th onclick="sortHistorico('ing_total')">Ingresos <i class="bi bi-arrow-down-up"></i></th>
+                    <th>Cerrado en</th>
+                  </tr>
+                </thead>
+                <tbody id="histTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado vacío -->
+        <div id="indEmpty" class="ind-empty" style="display:none">
+          <i class="bi bi-database-slash"></i>
+          <p>Sin datos históricos.<br>Usa <strong>Cerrar mes</strong> para comenzar a registrar.</p>
+        </div>
+      </div>
+      <!-- CAMPANAS -->
+      <div id="view-campanas" class="view" style="display:none">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Campañas</h1>
+            <p class="view-sub">Envío de correos masivos y personalizados</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title"><i class="bi bi-people-check"></i> Seleccionar destinatarios</span>
+          </div>
+          <div class="panel-body" style="padding:16px">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.95rem">
+                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                <span>Seleccionar todos (activos)</span>
+              </label>
+              <span id="selectedCount" style="color:#666;font-size:.9rem"></span>
+            </div>
+            <div id="recipientsList" style="max-height:400px;overflow-y:auto;border:1px solid #ddd;border-radius:6px"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px">
+          <div class="panel-body" style="padding:16px;text-align:center">
+            <button class="action-btn" onclick="openEmailComposer()" style="min-width:200px;padding:12px 24px;font-size:1rem">
+              <i class="bi bi-pencil-square"></i> Redactar y enviar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMAIL COMPOSER MODAL -->
+      <div id="emailComposerModal" class="modal" style="display:none">
+        <div class="modal-overlay" onclick="closeEmailComposer()"></div>
+        <div class="modal-card" style="max-width:900px;max-height:92vh;display:flex;flex-direction:column">
+          <div class="modal-header">
+            <h2 class="modal-title">Redactar Campaña</h2>
+            <button class="modal-close" onclick="closeEmailComposer()"><i class="bi bi-x-lg"></i></button>
+          </div>
+
+          <div class="modal-body" style="flex:1;overflow-y:auto;padding:24px">
+            
+            <div style="margin-bottom:24px">
+              <label style="display:block;font-weight:500;margin-bottom:8px;font-size:.95rem">Asunto</label>
+              <input type="text" id="emailSubject" class="form-input-text" placeholder="Ej: Ofertas especiales para nuestros huéspedes" style="width:100%">
+            </div>
+
+            <div style="margin-bottom:24px">
+              <label style="display:block;font-weight:500;margin-bottom:8px;font-size:.95rem">Contenido del correo</label>
+              <div id="emailEditorToolbar" style="background:#f9f9f9;border:1px solid #ddd;border-bottom:none;border-radius:6px 6px 0 0;padding:8px;display:flex;gap:4px;flex-wrap:wrap">
+                <button class="editor-btn" id="bold-btn" title="Negrita"><i class="bi bi-type-bold"></i></button>
+                <button class="editor-btn" id="italic-btn" title="Cursiva"><i class="bi bi-type-italic"></i></button>
+                <button class="editor-btn" id="underline-btn" title="Subrayado"><i class="bi bi-type-underline"></i></button>
+                <div style="width:1px;background:#ddd;margin:0 4px"></div>
+                <button class="editor-btn" id="list-btn" title="Lista"><i class="bi bi-list-ul"></i></button>
+                <button class="editor-btn" id="link-btn" title="Enlace"><i class="bi bi-link-45deg"></i></button>
+                <div style="width:1px;background:#ddd;margin:0 4px"></div>
+                <button class="editor-btn" id="template-btn" title="Insertar variable"><i class="bi bi-braces"></i></button>
+              </div>
+              <div id="emailEditor" contenteditable="true" style="background:white;border:1px solid #ddd;border-radius:0 0 6px 6px;min-height:300px;overflow-y:auto;font-family:'DM Sans',sans-serif;font-size:1rem;line-height:1.6;color:#333;padding:16px"></div>
+            </div>
+
+            <div style="margin-bottom:24px;padding:16px;background:#f5f5f5;border-radius:6px">
+              <p style="margin:0 0 12px;font-size:.9rem;font-weight:500;color:#666">O carga una plantilla:</p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="template-card" onclick="loadTemplate('standard')">
+                  <i class="bi bi-file-text"></i> Estándar
+                </button>
+                <button class="template-card" onclick="loadTemplate('promo')">
+                  <i class="bi bi-star"></i> Promoción
+                </button>
+                <button class="template-card" onclick="loadTemplate('event')">
+                  <i class="bi bi-calendar-event"></i> Evento
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="modal-footer">
+            <button class="modal-btn modal-btn-cancel" onclick="closeEmailComposer()">Cancelar</button>
+            <button class="modal-btn modal-btn-save" id="sendEmailBtn" onclick="sendCampaign()">
+              <i class="bi bi-send"></i> Enviar a seleccionados
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- DETAIL DRAWER -->
+  <div id="drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-backdrop" onclick="closeDrawer()"></div>
+    <div class="drawer-panel">
+      <div class="drawer-head">
+        <div class="drawer-title" id="drawerTitle">Detalle</div>
+        <button class="drawer-close" onclick="closeDrawer()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="drawer-body" id="drawerBody"></div>
+      <div class="drawer-footer" id="drawerFooter"></div>
+    </div>
+  </div>
+
+  <!-- EDIT MODAL -->
+  <div id="editModal" class="modal-overlay" style="display:none" onclick="closeEditModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title">Editar registro</div>
+        <button class="drawer-close" onclick="closeEditModalBtn()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body" id="editModalBody"></div>
+      <div class="modal-foot">
+        <button class="modal-btn modal-btn-cancel" onclick="closeEditModalBtn()">Cancelar</button>
+        <button class="modal-btn modal-btn-save" onclick="saveEdit()"><i class="bi bi-check2"></i> Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM MODAL -->
+  <div id="confirmModal" class="modal-overlay" style="display:none">
+    <div class="modal-card modal-card-sm" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title" id="confirmTitle">¿Confirmar acción?</div>
+        <button class="drawer-close" onclick="closeConfirm()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="confirm-icon-wrap" id="confirmIconWrap">
+          <i class="bi bi-exclamation-triangle-fill confirm-icon"></i>
+        </div>
+        <p class="confirm-msg" id="confirmMsg"></p>
+      </div>
+      <div class="modal-foot">
+        <button class="modal-btn modal-btn-cancel" onclick="closeConfirm()">Cancelar</button>
+        <button class="modal-btn modal-btn-danger" id="confirmOkBtn" onclick="_confirmCallback_ && _confirmCallback_()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERRAR MES MODAL -->
+  <div id="cerrarMesModal" class="modal-overlay" style="display:none" onclick="closeCerrarMesModal(event)">
+    <div class="modal-card modal-card-sm" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-title"><i class="bi bi-calendar-check"></i> Cerrar mes</div>
+        <button class="drawer-close" onclick="closeCerrarMesModal()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Hoteles -->
+        <div class="cm-section">
+          <div class="cm-section-head">
+            <label class="edit-label">Hoteles</label>
+            <label class="cm-todos-label">
+              <input type="checkbox" id="cmTodos" onchange="toggleCmTodos()">
+              Seleccionar todos
+            </label>
+          </div>
+          <div class="cm-hotel-list" id="cmHotelList">
+            <div class="ind-loading-sm">Cargando…</div>
+          </div>
+        </div>
+        <!-- Rango de fechas -->
+        <div class="cm-section">
+          <label class="edit-label" style="margin-bottom:8px;display:block">Rango</label>
+          <div class="cm-range-row">
+            <div class="cm-range-group">
+              <span class="cm-range-label">Desde</span>
+              <select id="cmMesInicio" class="edit-input edit-select cm-range-select">
+                <option value="1">Enero</option><option value="2">Febrero</option>
+                <option value="3">Marzo</option><option value="4">Abril</option>
+                <option value="5">Mayo</option><option value="6">Junio</option>
+                <option value="7">Julio</option><option value="8">Agosto</option>
+                <option value="9">Septiembre</option><option value="10">Octubre</option>
+                <option value="11">Noviembre</option><option value="12">Diciembre</option>
+              </select>
+              <select id="cmAnioInicio" class="edit-input edit-select cm-range-select"></select>
+            </div>
+            <div class="cm-range-arrow"><i class="bi bi-arrow-right"></i></div>
+            <div class="cm-range-group">
+              <span class="cm-range-label">Hasta</span>
+              <select id="cmMesFin" class="edit-input edit-select cm-range-select">
+                <option value="1">Enero</option><option value="2">Febrero</option>
+                <option value="3">Marzo</option><option value="4">Abril</option>
+                <option value="5">Mayo</option><option value="6">Junio</option>
+                <option value="7">Julio</option><option value="8">Agosto</option>
+                <option value="9">Septiembre</option><option value="10">Octubre</option>
+                <option value="11">Noviembre</option><option value="12">Diciembre</option>
+              </select>
+              <select id="cmAnioFin" class="edit-input edit-select cm-range-select"></select>
+            </div>
+          </div>
+        </div>
+        <!-- Resumen de operación -->
+        <div id="cmResumen" class="cm-resumen" style="display:none"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="modal-btn modal-btn-cancel" onclick="closeCerrarMesModal()">Cancelar</button>
+        <button class="modal-btn modal-btn-save" onclick="ejecutarCerrarMes()">
+          <i class="bi bi-cloud-upload"></i> Cerrar mes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast" style="display:none"></div>
+  <div id="debug-includes" style="display:none">TEST</div>
+  <?!= include_("JS_Registros") ?>
+  <?!= include_("JS_Charts") ?>
+  <?!= include_("JS_Vistas") ?>
+  <?!= include_("JS_Indicadores") ?>
+  <?!= include_("JS_Correos") ?>
+  <?!= include_("JavaScript") ?>
+</body>
+
+</html>

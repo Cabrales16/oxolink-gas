@@ -1,0 +1,686 @@
+<script>
+// ══════════════════════════════════════════════════════════════
+//  Oxo Partners · Admin · Gráficas SVG  (v3 — tabs)
+// ══════════════════════════════════════════════════════════════
+
+function _clearIndCharts_() {
+  ["menChart","menChartIngresos",
+   "anuChartOcc","anuChartTarifa","anuChartRevpar",
+   "cmpChart","cmpChartIngresos",
+   "menLegend","menIngLegend",
+   "anuOccLegend","anuTarifaLegend","anuRevparLegend",
+   "cmpLegend","indRanking"]
+    .forEach(function(id) { var el = document.getElementById(id); if (el) el.innerHTML = ""; });
+  _indChartMain = null;
+  _indChartIng  = null;
+}
+
+function _resizeIndCharts_() {
+  if (_currentView === "indicadores" && _indHistorico) _renderTabActual_();
+}
+
+// ── Gráfica mensual: barras agrupadas Real / Ppto / Año ant ───
+
+function _renderIndChartMain_Mensual_(row) {
+  var container = document.getElementById("menChart");
+  var legendEl  = document.getElementById("menLegend");
+  if (!container) return;
+  container.innerHTML = "";
+  if (legendEl) legendEl.innerHTML = "";
+
+  var metricas = [
+    { key: "occ",    label: "Ocupaci\u00f3n", isPercent: true  },
+    { key: "tarifa", label: "Tarifa",         isPercent: false },
+    { key: "revpar", label: "RevPAR",         isPercent: false },
+  ];
+
+  var series = [
+    { suffix: "_real", label: "Real",         color: "#8A6E3D" },
+    { suffix: "_ppto", label: "Presupuesto",  color: "#1677ff" },
+    { suffix: "_ant",  label: "A\u00f1o ant.", color: "#bbb"   },
+  ];
+
+  var ns  = "http://www.w3.org/2000/svg";
+  var W = container.offsetWidth || container.parentElement && container.parentElement.offsetWidth || 600;
+  var H   = 240;
+  var pad = { l: 60, r: 20, t: 20, b: 40 };
+  var cW  = W - pad.l - pad.r;
+  var cH  = H - pad.t - pad.b;
+  var nGroups  = metricas.length;
+  var nBars    = series.length;
+  var groupW   = cW / nGroups;
+  var barW     = Math.min(groupW / (nBars + 1), 32);
+  var groupGap = (groupW - barW * nBars) / 2;
+
+  // Calcular max por métrica para escala independiente
+  var maxVals = metricas.map(function(m) {
+    var vals = series.map(function(s) { return Math.abs(Number(row[m.key + s.suffix]) || 0); });
+    return Math.max.apply(null, vals) * 1.15 || 1;
+  });
+
+  var svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("height", String(H));
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.style.overflow   = "visible";
+  svg.style.fontFamily = "'DM Sans', system-ui, sans-serif";
+
+  // Grid horizontal (4 líneas)
+  for (var g = 1; g <= 4; g++) {
+    var gY = pad.t + cH - (g / 4) * cH;
+    var gl = document.createElementNS(ns, "line");
+    gl.setAttribute("x1", pad.l); gl.setAttribute("x2", W - pad.r);
+    gl.setAttribute("y1", gY);    gl.setAttribute("y2", gY);
+    gl.setAttribute("stroke", "rgba(0,0,0,.06)"); gl.setAttribute("stroke-width", "1");
+    gl.setAttribute("stroke-dasharray", "3,3");
+    svg.appendChild(gl);
+  }
+
+  var tooltip = document.createElement("div");
+  tooltip.style.cssText = "position:absolute;background:#fff;border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:8px 12px;font-size:11px;color:#333;pointer-events:none;display:none;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:10;font-family:'DM Sans',system-ui,sans-serif;";
+  container.style.position = "relative";
+  container.appendChild(tooltip);
+
+  metricas.forEach(function(m, gi) {
+    var maxV   = maxVals[gi];
+    var groupX = pad.l + gi * groupW;
+
+    // Label métrica eje X
+    var lbl = document.createElementNS(ns, "text");
+    lbl.setAttribute("x", groupX + groupW / 2);
+    lbl.setAttribute("y", H - 8);
+    lbl.setAttribute("text-anchor", "middle");
+    lbl.setAttribute("font-size", "11");
+    lbl.setAttribute("font-weight", "600");
+    lbl.setAttribute("fill", "#999");
+    lbl.textContent = m.label;
+    svg.appendChild(lbl);
+
+    series.forEach(function(s, si) {
+      var val  = Number(row[m.key + s.suffix]);
+      if (isNaN(val) || val === null) return;
+      var bH   = Math.max((Math.abs(val) / maxV) * cH, 2);
+      var bX   = groupX + groupGap + si * barW;
+      var bY   = pad.t + cH - bH;
+
+      var rect = document.createElementNS(ns, "rect");
+      rect.setAttribute("x",      bX);
+      rect.setAttribute("y",      bY);
+      rect.setAttribute("width",  barW - 2);
+      rect.setAttribute("height", bH);
+      rect.setAttribute("rx",     "3");
+      rect.setAttribute("fill",   s.color);
+      rect.setAttribute("opacity", si === 0 ? "1" : "0.55");
+      rect.style.cursor = "pointer";
+
+      // Tooltip por barra
+      (function(label, value, isP) {
+        rect.addEventListener("mouseenter", function(e) {
+          var fmt = isP ? (value * 100).toFixed(1) + "%" : "$" + _fmtNum_(value);
+          tooltip.innerHTML = '<div style="font-weight:700;color:#555;margin-bottom:4px">' + label + '</div>' +
+            '<div style="font-size:13px;font-weight:800;color:#333">' + fmt + '</div>';
+          tooltip.style.display = "block";
+        });
+        rect.addEventListener("mouseleave", function() { tooltip.style.display = "none"; });
+      })(m.label + " — " + s.label, val, m.isPercent);
+
+      svg.appendChild(rect);
+
+      // Valor encima de la barra (solo Real)
+      if (si === 0 && bH > 18) {
+        var vt = document.createElementNS(ns, "text");
+        vt.setAttribute("x", bX + (barW - 2) / 2);
+        vt.setAttribute("y", bY - 4);
+        vt.setAttribute("text-anchor", "middle");
+        vt.setAttribute("font-size", "9");
+        vt.setAttribute("font-weight", "700");
+        vt.setAttribute("fill", s.color);
+        vt.textContent = m.isPercent ? (val * 100).toFixed(0) + "%" : "$" + _fmtNum_(val);
+        svg.appendChild(vt);
+      }
+    });
+  });
+
+  container.appendChild(svg);
+
+  // Leyenda
+  if (legendEl) {
+    legendEl.innerHTML = series.map(function(s) {
+      return '<div class="ind-legend-item">' +
+        '<div class="ind-legend-dot" style="background:' + s.color + ';opacity:' + (s.suffix === "_real" ? "1" : "0.55") + '"></div>' +
+        s.label + '</div>';
+    }).join("");
+  }
+}
+
+// ── Gráfica anual: líneas Real vs Ppto vs Año ant ─────────────
+
+function _renderIndChartMain_Anual_(rows, metrica, containerId, legendId) {
+  var container = document.getElementById(containerId || "anuChartOcc");
+  var legendEl  = document.getElementById(legendId    || "anuOccLegend");
+  if (!container) return;
+  container.innerHTML = "";
+  if (legendEl) legendEl.innerHTML = "";
+
+  var isPercent = metrica === "occ";
+  var series = [
+    { key: metrica + "_real", label: "Real",         color: "#8A6E3D" },
+    { key: metrica + "_ppto", label: "Presupuesto",  color: "#1677ff" },
+    { key: metrica + "_ant",  label: "A\u00f1o ant.", color: "#bbb"   },
+  ];
+
+  // Ordenar por mes_num
+  var sorted = rows.slice().sort(function(a, b) { return Number(a.mes_num) - Number(b.mes_num); });
+
+  var ns  = "http://www.w3.org/2000/svg";
+  var W = container.offsetWidth || container.parentElement && container.parentElement.offsetWidth || 600;
+  var H   = 240;
+  var pad = { l: 56, r: 16, t: 16, b: 36 };
+  var cW  = W - pad.l - pad.r;
+  var cH  = H - pad.t - pad.b;
+  var n   = sorted.length;
+
+  var allVals = [];
+  series.forEach(function(s) {
+    sorted.forEach(function(r) { var v = Number(r[s.key]); if (!isNaN(v)) allVals.push(v); });
+  });
+  if (!allVals.length) { container.innerHTML = '<div class="ind-loading-sm" style="padding:20px">Sin datos.</div>'; return; }
+
+  var minV = Math.min.apply(null, allVals);
+  var maxV = Math.max.apply(null, allVals);
+  var rng  = maxV - minV || 1;
+  minV -= rng * 0.1; maxV += rng * 0.1; rng = maxV - minV;
+
+  var toX = function(i) { return pad.l + (n > 1 ? i * cW / (n - 1) : cW / 2); };
+  var toY = function(v) { return pad.t + cH - ((v - minV) / rng) * cH; };
+
+  var svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("height", String(H));
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.style.overflow   = "visible";
+  svg.style.fontFamily = "'DM Sans', system-ui, sans-serif";
+
+  // Gradientes
+  var defs = document.createElementNS(ns, "defs");
+  series.forEach(function(s, idx) {
+    var grad = document.createElementNS(ns, "linearGradient");
+    grad.setAttribute("id", "grad-anu-" + idx);
+    grad.setAttribute("x1","0"); grad.setAttribute("y1","0");
+    grad.setAttribute("x2","0"); grad.setAttribute("y2","1");
+    var s1 = document.createElementNS(ns, "stop");
+    s1.setAttribute("offset","0%"); s1.setAttribute("stop-color", s.color); s1.setAttribute("stop-opacity","0.18");
+    var s2 = document.createElementNS(ns, "stop");
+    s2.setAttribute("offset","100%"); s2.setAttribute("stop-color", s.color); s2.setAttribute("stop-opacity","0");
+    grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad);
+  });
+  svg.appendChild(defs);
+
+  // Grid
+  for (var g = 0; g <= 4; g++) {
+    var gV = minV + rng * g / 4;
+    var gY = toY(gV);
+    var gl = document.createElementNS(ns, "line");
+    gl.setAttribute("x1", pad.l); gl.setAttribute("x2", W - pad.r);
+    gl.setAttribute("y1", gY);    gl.setAttribute("y2", gY);
+    gl.setAttribute("stroke","rgba(0,0,0,.06)"); gl.setAttribute("stroke-width","1");
+    gl.setAttribute("stroke-dasharray","3,3");
+    svg.appendChild(gl);
+    var gt = document.createElementNS(ns, "text");
+    gt.setAttribute("x", pad.l - 5); gt.setAttribute("y", gY + 4);
+    gt.setAttribute("text-anchor","end"); gt.setAttribute("font-size","10"); gt.setAttribute("fill","#aaa");
+    gt.textContent = isPercent ? (gV * 100).toFixed(0) + "%" : "$" + _fmtNum_(gV);
+    svg.appendChild(gt);
+  }
+
+  // Labels eje X (meses)
+  sorted.forEach(function(r, i) {
+    var t = document.createElementNS(ns, "text");
+    t.setAttribute("x", toX(i)); t.setAttribute("y", H - 8);
+    t.setAttribute("text-anchor","middle"); t.setAttribute("font-size","10"); t.setAttribute("fill","#bbb");
+    t.textContent = MESES_SHORT[Number(r.mes_num) - 1] || r.mes;
+    svg.appendChild(t);
+  });
+
+  // Series
+  series.forEach(function(s, idx) {
+    var pts = sorted.map(function(r, i) { return { i: i, v: Number(r[s.key]) }; })
+                    .filter(function(p) { return !isNaN(p.v); });
+    if (!pts.length) return;
+
+    var isDashed = idx > 0;
+
+    // Área (solo Real)
+    if (idx === 0) {
+      var aD = "M " + toX(pts[0].i) + " " + (pad.t + cH);
+      pts.forEach(function(p) { aD += " L " + toX(p.i) + " " + toY(p.v); });
+      aD += " L " + toX(pts[pts.length-1].i) + " " + (pad.t + cH) + " Z";
+      var area = document.createElementNS(ns, "path");
+      area.setAttribute("d", aD); area.setAttribute("fill", "url(#grad-anu-0)");
+      svg.appendChild(area);
+    }
+
+    // Línea
+    var lD = pts.map(function(p, pi) { return (pi===0?"M ":"L ") + toX(p.i) + " " + toY(p.v); }).join(" ");
+    var line = document.createElementNS(ns, "path");
+    line.setAttribute("d", lD); line.setAttribute("fill","none");
+    line.setAttribute("stroke", s.color);
+    line.setAttribute("stroke-width", idx === 0 ? "2.5" : "1.8");
+    line.setAttribute("stroke-linejoin","round"); line.setAttribute("stroke-linecap","round");
+    if (isDashed) line.setAttribute("stroke-dasharray", "5,3");
+    svg.appendChild(line);
+
+    // Puntos (solo Real)
+    if (idx === 0) {
+      pts.forEach(function(p) {
+        var dot = document.createElementNS(ns, "circle");
+        dot.setAttribute("cx", toX(p.i)); dot.setAttribute("cy", toY(p.v));
+        dot.setAttribute("r","4"); dot.setAttribute("fill", s.color);
+        dot.setAttribute("stroke","#fff"); dot.setAttribute("stroke-width","2");
+        svg.appendChild(dot);
+      });
+    }
+  });
+
+  container.appendChild(svg);
+
+  // Leyenda
+  if (legendEl) {
+    legendEl.innerHTML = series.map(function(s, idx) {
+      return '<div class="ind-legend-item">' +
+        '<div class="ind-legend-dot" style="background:' + s.color + ';opacity:' + (idx === 0 ? "1" : "0.6") + '"></div>' +
+        s.label + '</div>';
+    }).join("");
+  }
+}
+
+// ── Gráfica principal multi-hotel (Comparativa) ───────────────
+
+function _renderIndChartMain_(rows, metrica, containerId, legendId) {
+  var container = document.getElementById(containerId || "cmpChart");
+  var legendEl  = document.getElementById(legendId    || "cmpLegend");
+  if (!container) return;
+  container.innerHTML = "";
+  if (legendEl) legendEl.innerHTML = "";
+  _indChartMain = null;
+
+  var metricaKey = metrica + "_real";
+  var isPercent  = metrica === "occ";
+
+  var hotelMap = {};
+  rows.forEach(function(r) {
+    var key = r.hotel_codigo;
+    if (!hotelMap[key]) hotelMap[key] = { nombre: r.hotel_nombre, puntos: [] };
+    var val = Number(r[metricaKey]);
+    if (!isNaN(val)) hotelMap[key].puntos.push({ m: Number(r.mes_num), a: Number(r.anio), v: val });
+  });
+
+  var hotelesSeries = Object.keys(hotelMap);
+  if (!hotelesSeries.length) {
+    container.innerHTML = '<div class="ind-loading-sm" style="padding:20px">Sin datos.</div>';
+    return;
+  }
+
+  hotelesSeries.forEach(function(k) {
+    hotelMap[k].puntos.sort(function(a, b) { return a.a !== b.a ? a.a - b.a : a.m - b.m; });
+  });
+
+  var xSet = {};
+  hotelesSeries.forEach(function(k) {
+    hotelMap[k].puntos.forEach(function(p) { xSet[p.a + "-" + String(p.m).padStart(2,"0")] = true; });
+  });
+  var xKeys = Object.keys(xSet).sort();
+
+  var ns  = "http://www.w3.org/2000/svg";
+  var W = container.offsetWidth || container.parentElement && container.parentElement.offsetWidth || 600;
+  var H   = 240;
+  var pad = { l: 56, r: 16, t: 16, b: 36 };
+  var cW  = W - pad.l - pad.r;
+  var cH  = H - pad.t - pad.b;
+
+  var allVals = [];
+  hotelesSeries.forEach(function(k) { hotelMap[k].puntos.forEach(function(p) { allVals.push(p.v); }); });
+  var minV = Math.min.apply(null, allVals);
+  var maxV = Math.max.apply(null, allVals);
+  var rng  = maxV - minV || 1;
+  minV -= rng * 0.12; maxV += rng * 0.12; rng = maxV - minV;
+
+  var toX  = function(i) { return pad.l + (xKeys.length > 1 ? i * cW / (xKeys.length - 1) : cW / 2); };
+  var toY  = function(v) { return pad.t + cH - ((v - minV) / rng) * cH; };
+  var xIdx = function(p) { return xKeys.indexOf(p.a + "-" + String(p.m).padStart(2,"0")); };
+
+  var svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("width","100%"); svg.setAttribute("height",String(H));
+  svg.setAttribute("viewBox","0 0 " + W + " " + H);
+  svg.style.overflow = "visible"; svg.style.fontFamily = "'DM Sans', system-ui, sans-serif";
+
+  var defs = document.createElementNS(ns, "defs");
+  hotelesSeries.forEach(function(k, idx) {
+    var color = IND_COLORS[idx % IND_COLORS.length];
+    var grad  = document.createElementNS(ns, "linearGradient");
+    grad.setAttribute("id","grad-cmp-" + idx);
+    grad.setAttribute("x1","0"); grad.setAttribute("y1","0"); grad.setAttribute("x2","0"); grad.setAttribute("y2","1");
+    var s1 = document.createElementNS(ns, "stop");
+    s1.setAttribute("offset","0%"); s1.setAttribute("stop-color",color); s1.setAttribute("stop-opacity","0.18");
+    var s2 = document.createElementNS(ns, "stop");
+    s2.setAttribute("offset","100%"); s2.setAttribute("stop-color",color); s2.setAttribute("stop-opacity","0");
+    grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad);
+  });
+  svg.appendChild(defs);
+
+  for (var g = 0; g <= 4; g++) {
+    var gV = minV + rng * g / 4;
+    var gY = toY(gV);
+    var gl = document.createElementNS(ns, "line");
+    gl.setAttribute("x1",pad.l); gl.setAttribute("x2",W-pad.r);
+    gl.setAttribute("y1",gY); gl.setAttribute("y2",gY);
+    gl.setAttribute("stroke","rgba(0,0,0,.06)"); gl.setAttribute("stroke-width","1"); gl.setAttribute("stroke-dasharray","3,3");
+    svg.appendChild(gl);
+    var gt = document.createElementNS(ns, "text");
+    gt.setAttribute("x",pad.l-5); gt.setAttribute("y",gY+4);
+    gt.setAttribute("text-anchor","end"); gt.setAttribute("font-size","10"); gt.setAttribute("fill","#aaa");
+    gt.textContent = isPercent ? (gV*100).toFixed(0)+"%" : "$"+_fmtNum_(gV);
+    svg.appendChild(gt);
+  }
+
+  var step = Math.ceil(xKeys.length / 12);
+  xKeys.forEach(function(k, i) {
+    if (i % step !== 0 && i !== xKeys.length - 1) return;
+    var parts = k.split("-");
+    var t = document.createElementNS(ns, "text");
+    t.setAttribute("x",toX(i)); t.setAttribute("y",H-8);
+    t.setAttribute("text-anchor","middle"); t.setAttribute("font-size","10"); t.setAttribute("fill","#bbb");
+    t.textContent = MESES_SHORT[parseInt(parts[1],10)-1] + " " + parts[0].slice(2);
+    svg.appendChild(t);
+  });
+
+  hotelesSeries.forEach(function(k, idx) {
+    var hotel = hotelMap[k];
+    var color = IND_COLORS[idx % IND_COLORS.length];
+    var pts   = hotel.puntos.filter(function(p) { return !isNaN(p.v); });
+    if (!pts.length) return;
+
+    var aD = "M "+toX(xIdx(pts[0]))+" "+(pad.t+cH);
+    pts.forEach(function(p) { aD += " L "+toX(xIdx(p))+" "+toY(p.v); });
+    aD += " L "+toX(xIdx(pts[pts.length-1]))+" "+(pad.t+cH)+" Z";
+    var area = document.createElementNS(ns, "path");
+    area.setAttribute("d",aD); area.setAttribute("fill","url(#grad-cmp-"+idx+")");
+    svg.appendChild(area);
+
+    var lD = pts.map(function(p,pi){ return (pi===0?"M ":"L ")+toX(xIdx(p))+" "+toY(p.v); }).join(" ");
+    var line = document.createElementNS(ns, "path");
+    line.setAttribute("d",lD); line.setAttribute("fill","none");
+    line.setAttribute("stroke",color); line.setAttribute("stroke-width","2.5");
+    line.setAttribute("stroke-linejoin","round"); line.setAttribute("stroke-linecap","round");
+    svg.appendChild(line);
+
+    pts.forEach(function(p) {
+      var dot = document.createElementNS(ns, "circle");
+      dot.setAttribute("cx",toX(xIdx(p))); dot.setAttribute("cy",toY(p.v));
+      dot.setAttribute("r","4"); dot.setAttribute("fill",color);
+      dot.setAttribute("stroke","#fff"); dot.setAttribute("stroke-width","2");
+      svg.appendChild(dot);
+    });
+
+    if (legendEl) {
+      legendEl.innerHTML += '<div class="ind-legend-item">' +
+        '<div class="ind-legend-dot" style="background:'+color+'"></div>' + esc(hotel.nombre) + '</div>';
+    }
+  });
+
+  container.appendChild(svg);
+  _indChartMain = { el: svg };
+}
+
+// ── Gráfica ingresos (Comparativa) ───────────────────────────
+
+function _renderIndChartIngresos_(rows, containerId) {
+  var container = document.getElementById(containerId || "cmpChartIngresos");
+  if (!container) return;
+  container.innerHTML = "";
+  _indChartIng = null;
+
+  var byMes = {};
+  rows.forEach(function(r) {
+    var k = String(r.anio) + "-" + String(r.mes_num).padStart(2,"0");
+    if (!byMes[k]) byMes[k] = { aloj:0, ayb:0, otros:0 };
+    byMes[k].aloj  += Number(r.ing_aloj)  || 0;
+    byMes[k].ayb   += Number(r.ing_ayb)   || 0;
+    byMes[k].otros += Number(r.ing_otros) || 0;
+  });
+
+  var xKeys = Object.keys(byMes).sort();
+  if (!xKeys.length) { container.innerHTML = '<div class="ind-loading-sm" style="padding:20px">Sin datos.</div>'; return; }
+
+  var W = container.offsetWidth || container.parentElement && container.parentElement.offsetWidth || 500;
+  var H   = 240;
+  var pad = { l: 56, r: 16, t: 16, b: 36 };
+  var cW  = W - pad.l - pad.r;
+  var cH  = H - pad.t - pad.b;
+
+  var maxTotal = Math.max.apply(null, xKeys.map(function(k) {
+    return byMes[k].aloj + byMes[k].ayb + byMes[k].otros;
+  })) * 1.1 || 1;
+
+  var toX = function(i) { return pad.l + (xKeys.length > 1 ? i * cW / (xKeys.length - 1) : cW / 2); };
+  var toY = function(v) { return pad.t + cH - (v / maxTotal) * cH; };
+
+  var seriesConfig = [
+    { key:"aloj",  color:"#8A6E3D", label:"Alojamiento" },
+    { key:"ayb",   color:"#52c41a", label:"A&B"         },
+    { key:"otros", color:"#1677ff", label:"Otros"       },
+  ];
+
+  var ns  = "http://www.w3.org/2000/svg";
+  var svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("width","100%"); svg.setAttribute("height",String(H));
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  svg.style.overflow = "visible"; svg.style.fontFamily = "'DM Sans', system-ui, sans-serif";
+
+  var defs = document.createElementNS(ns, "defs");
+  seriesConfig.forEach(function(cfg, idx) {
+    var grad = document.createElementNS(ns, "linearGradient");
+    grad.setAttribute("id","grad-ing-"+idx);
+    grad.setAttribute("x1","0"); grad.setAttribute("y1","0"); grad.setAttribute("x2","0"); grad.setAttribute("y2","1");
+    var s1 = document.createElementNS(ns, "stop");
+    s1.setAttribute("offset","0%"); s1.setAttribute("stop-color",cfg.color); s1.setAttribute("stop-opacity","0.2");
+    var s2 = document.createElementNS(ns, "stop");
+    s2.setAttribute("offset","100%"); s2.setAttribute("stop-color",cfg.color); s2.setAttribute("stop-opacity","0");
+    grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad);
+  });
+  svg.appendChild(defs);
+
+  for (var g = 0; g <= 4; g++) {
+    var gV = maxTotal * g / 4;
+    var gY = toY(gV);
+    var gl = document.createElementNS(ns, "line");
+    gl.setAttribute("x1",pad.l); gl.setAttribute("x2",W-pad.r);
+    gl.setAttribute("y1",gY);    gl.setAttribute("y2",gY);
+    gl.setAttribute("stroke","rgba(0,0,0,.06)"); gl.setAttribute("stroke-width","1"); gl.setAttribute("stroke-dasharray","3,3");
+    svg.appendChild(gl);
+    var gt = document.createElementNS(ns, "text");
+    gt.setAttribute("x",pad.l-5); gt.setAttribute("y",gY+4);
+    gt.setAttribute("text-anchor","end"); gt.setAttribute("font-size","10"); gt.setAttribute("fill","#aaa");
+    gt.textContent = "$"+_fmtNum_(gV);
+    svg.appendChild(gt);
+  }
+
+  var step = Math.ceil(xKeys.length / 12);
+  xKeys.forEach(function(k, i) {
+    if (i % step !== 0 && i !== xKeys.length - 1) return;
+    var parts = k.split("-");
+    var t = document.createElementNS(ns, "text");
+    t.setAttribute("x",toX(i)); t.setAttribute("y",H-8);
+    t.setAttribute("text-anchor","middle"); t.setAttribute("font-size","10"); t.setAttribute("fill","#bbb");
+    t.textContent = MESES_SHORT[parseInt(parts[1],10)-1]+" "+parts[0].slice(2);
+    svg.appendChild(t);
+  });
+
+  seriesConfig.forEach(function(cfg, idx) {
+    var aD = "M "+toX(0)+" "+(pad.t+cH);
+    xKeys.forEach(function(k,i){ aD += " L "+toX(i)+" "+toY(byMes[k][cfg.key]); });
+    aD += " L "+toX(xKeys.length-1)+" "+(pad.t+cH)+" Z";
+    var area = document.createElementNS(ns, "path");
+    area.setAttribute("d",aD); area.setAttribute("fill","url(#grad-ing-"+idx+")");
+    svg.appendChild(area);
+
+    var lD = xKeys.map(function(k,i){ return (i===0?"M ":"L ")+toX(i)+" "+toY(byMes[k][cfg.key]); }).join(" ");
+    var line = document.createElementNS(ns, "path");
+    line.setAttribute("d",lD); line.setAttribute("fill","none");
+    line.setAttribute("stroke",cfg.color); line.setAttribute("stroke-width","2");
+    line.setAttribute("stroke-linejoin","round");
+    svg.appendChild(line);
+  });
+
+  var legY = pad.t + 14, legX = pad.l + 8;
+  seriesConfig.forEach(function(cfg, idx) {
+    var dot = document.createElementNS(ns, "rect");
+    dot.setAttribute("x",legX+idx*90); dot.setAttribute("y",legY-7);
+    dot.setAttribute("width","10"); dot.setAttribute("height","3"); dot.setAttribute("rx","2"); dot.setAttribute("fill",cfg.color);
+    svg.appendChild(dot);
+    var lt = document.createElementNS(ns, "text");
+    lt.setAttribute("x",legX+idx*90+14); lt.setAttribute("y",legY);
+    lt.setAttribute("font-size","10"); lt.setAttribute("fill","#666"); lt.setAttribute("font-weight","600");
+    lt.textContent = cfg.label;
+    svg.appendChild(lt);
+  });
+
+  container.appendChild(svg);
+  _indChartIng = { el: svg };
+}
+
+// ── Composición de ingresos (tab Mensual) ─────────────────────
+
+function _renderMenChartIngresos_(row) {
+  var container = document.getElementById("menChartIngresos");
+  var legendEl  = document.getElementById("menIngLegend");
+  if (!container) return;
+  container.innerHTML = "";
+  if (legendEl) legendEl.innerHTML = "";
+
+  var aloj  = Number(row.ing_aloj)  || 0;
+  var ayb   = Number(row.ing_ayb)   || 0;
+  var otros = Number(row.ing_otros) || 0;
+  var total = aloj + ayb + otros;
+
+  if (!total) {
+    container.innerHTML = '<div class="ind-loading-sm" style="padding:20px">Sin datos de ingresos.</div>';
+    return;
+  }
+
+  var series = [
+    { label: "Alojamiento", color: "#8A6E3D", val: aloj  },
+    { label: "A&B",         color: "#52c41a", val: ayb   },
+    { label: "Otros",       color: "#1677ff", val: otros },
+  ];
+
+  var ns    = "http://www.w3.org/2000/svg";
+  var W     = container.offsetWidth || (container.parentElement && container.parentElement.offsetWidth) || 500;
+  var barH  = 34;
+  var barGap= 12;
+  var padL  = 108; var padR = 80; var padT = 14; var padB = 14;
+  var H     = padT + series.length * (barH + barGap) - barGap + padB;
+  var areaW = W - padL - padR;
+  var maxVal= Math.max.apply(null, series.map(function(s) { return s.val; })) * 1.12 || 1;
+
+  var svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("width",   "100%");
+  svg.setAttribute("height",  String(H));
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.style.overflow   = "visible";
+  svg.style.fontFamily = "'DM Sans', system-ui, sans-serif";
+
+  var tooltip = document.createElement("div");
+  tooltip.style.cssText = "position:absolute;background:#fff;border:1px solid rgba(0,0,0,.1);" +
+    "border-radius:8px;padding:7px 11px;font-size:11px;color:#333;pointer-events:none;" +
+    "display:none;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:10;font-family:'DM Sans',system-ui;";
+  container.style.position = "relative";
+  container.appendChild(tooltip);
+
+  series.forEach(function(s, i) {
+    var bY  = padT + i * (barH + barGap);
+    var bW  = Math.max((s.val / maxVal) * areaW, 4);
+    var pct = ((s.val / total) * 100).toFixed(1);
+
+    // Label izquierdo
+    var lbl = document.createElementNS(ns, "text");
+    lbl.setAttribute("x",           String(padL - 8));
+    lbl.setAttribute("y",           String(bY + barH / 2 + 4));
+    lbl.setAttribute("text-anchor", "end");
+    lbl.setAttribute("font-size",   "11");
+    lbl.setAttribute("font-weight", "600");
+    lbl.setAttribute("fill",        "#666");
+    lbl.textContent = s.label;
+    svg.appendChild(lbl);
+
+    // Track
+    var track = document.createElementNS(ns, "rect");
+    track.setAttribute("x",      String(padL));
+    track.setAttribute("y",      String(bY));
+    track.setAttribute("width",  String(areaW));
+    track.setAttribute("height", String(barH));
+    track.setAttribute("rx",     "6");
+    track.setAttribute("fill",   "rgba(0,0,0,.04)");
+    svg.appendChild(track);
+
+    // Barra
+    var bar = document.createElementNS(ns, "rect");
+    bar.setAttribute("x",      String(padL));
+    bar.setAttribute("y",      String(bY));
+    bar.setAttribute("width",  String(bW));
+    bar.setAttribute("height", String(barH));
+    bar.setAttribute("rx",     "6");
+    bar.setAttribute("fill",   s.color);
+    bar.setAttribute("opacity","0.88");
+    bar.style.cursor = "pointer";
+
+    (function(label, val, p) {
+      bar.addEventListener("mouseenter", function() {
+        tooltip.innerHTML = '<b style="color:#555">' + label + '</b><br>' +
+          '<span style="font-size:13px;font-weight:800;color:#333">$' + _fmtNum_(val) + '</span>' +
+          '&nbsp;<span style="color:#999">(' + p + '%)</span>';
+        tooltip.style.display = "block";
+      });
+      bar.addEventListener("mouseleave", function() { tooltip.style.display = "none"; });
+    })(s.label, s.val, pct);
+
+    svg.appendChild(bar);
+
+    // % al lado derecho
+    var vt = document.createElementNS(ns, "text");
+    vt.setAttribute("x",           String(padL + areaW + 8));
+    vt.setAttribute("y",           String(bY + barH / 2 + 4));
+    vt.setAttribute("font-size",   "11");
+    vt.setAttribute("font-weight", "700");
+    vt.setAttribute("fill",        s.color);
+    vt.textContent = pct + "%";
+    svg.appendChild(vt);
+
+    // Valor dentro de la barra (si cabe)
+    if (bW > 60) {
+      var vInner = document.createElementNS(ns, "text");
+      vInner.setAttribute("x",           String(padL + bW - 8));
+      vInner.setAttribute("y",           String(bY + barH / 2 + 4));
+      vInner.setAttribute("text-anchor", "end");
+      vInner.setAttribute("font-size",   "10");
+      vInner.setAttribute("font-weight", "700");
+      vInner.setAttribute("fill",        "#fff");
+      vInner.setAttribute("opacity",     "0.9");
+      vInner.textContent = "$" + _fmtNum_(s.val);
+      svg.appendChild(vInner);
+    }
+  });
+
+  container.appendChild(svg);
+
+  if (legendEl) {
+    legendEl.innerHTML = series.map(function(s) {
+      var pct = ((s.val / total) * 100).toFixed(1);
+      return '<div class="ind-legend-item">' +
+        '<div class="ind-legend-dot" style="background:' + s.color + '"></div>' +
+        s.label + ' <span style="color:var(--textMuted);font-weight:400">$' + _fmtNum_(s.val) +
+        ' (' + pct + '%)</span></div>';
+    }).join("");
+  }
+}
+</script>

@@ -1,0 +1,639 @@
+<script>
+// ══════════════════════════════════════════════════════════════
+//  Oxo Partners · Admin · Registros
+// ══════════════════════════════════════════════════════════════
+
+// ── Search ────────────────────────────────────────────────────
+
+function onRegSearch() {
+  var el = document.getElementById("regSearch");
+  _regSearch = el ? el.value.toLowerCase().trim() : "";
+  document.getElementById("regSearchClear").style.display = _regSearch ? "flex" : "none";
+  _regPage = 1;
+  renderRegistros();
+}
+
+function clearRegSearch() {
+  document.getElementById("regSearch").value = "";
+  _regSearch = "";
+  document.getElementById("regSearchClear").style.display = "none";
+  _regPage = 1;
+  renderRegistros();
+}
+
+// ── Export dropdown ───────────────────────────────────────────
+
+function toggleExportDropdown() {
+  var panel   = document.getElementById("exportDropdownPanel");
+  var chevron = document.getElementById("exportChevron");
+  var isOpen  = panel.style.display !== "none";
+  panel.style.display = isOpen ? "none" : "block";
+  chevron.className = isOpen ? "bi bi-chevron-down" : "bi bi-chevron-up";
+  chevron.style.marginLeft = "2px";
+  chevron.style.fontSize = ".75rem";
+}
+
+function closeExportDropdown() {
+  var panel   = document.getElementById("exportDropdownPanel");
+  var chevron = document.getElementById("exportChevron");
+  if (panel)   panel.style.display = "none";
+  if (chevron) chevron.className = "bi bi-chevron-down";
+}
+
+// ── Active filter pills ───────────────────────────────────────
+
+function renderActiveFilters() {
+  var row = document.getElementById("activeFiltersRow");
+  if (!row) return;
+  var pills = [];
+  if (_estadoFilter) {
+    var lbl = _estadoFilter === "activo" ? "Estado: Activo" : "Estado: Baja";
+    pills.push({ label: lbl, clear: function() { setEstadoFilter(""); } });
+  }
+  if (_dateFrom || _dateTo) {
+    var dlbl = document.getElementById("dateFilterLabel");
+    pills.push({ label: dlbl ? dlbl.textContent : "Fecha activa", clear: function() { clearDateFilter(); } });
+  }
+  if (_hotelFilters.length && _hotelFilters.length < (_data && _data.hoteles ? _data.hoteles.length : 0)) {
+    var hlbl = _hotelFilters.length === 1 ? _hotelFilters[0].slice(0,28) + (_hotelFilters[0].length > 28 ? "\u2026" : "") : (_hotelFilters.length + " propiedades");
+    pills.push({ label: hlbl, clear: function() { _hotelFilters = []; _hotelFilterTemp = []; updateHotelFilterLabel(); _regPage = 1; renderRegistros(); renderActiveFilters(); } });
+  }
+  if (!pills.length) { row.style.display = "none"; row.innerHTML = ""; return; }
+  row.style.display = "flex";
+  row.innerHTML = pills.map(function(p, i) {
+    return '<span class="af-pill">' + esc(p.label) + '<button class="af-remove" onclick="(__afClears[' + i + '])()" title="Quitar"><i class="bi bi-x"></i></button></span>';
+  }).join("") + '<button class="af-clear-all" onclick="clearAllFilters()"><i class="bi bi-x-circle"></i> Quitar todos</button>';
+  window.__afClears = pills.map(function(p) { return p.clear; });
+}
+
+function clearAllFilters() {
+  _estadoFilter = ""; _dateFrom = null; _dateTo = null; _hotelFilters = []; _hotelFilterTemp = [];
+  document.getElementById("estadoFilterLabel").textContent = "Todos";
+  document.querySelectorAll("input[name='estadoRadio']").forEach(function(r) { r.checked = (r.value === ""); });
+  document.getElementById("dateFilterLabel").textContent = "Todas las fechas";
+  var df = document.getElementById("dateFrom"); if (df) df.value = "";
+  var dt = document.getElementById("dateTo");   if (dt) dt.value = "";
+  updateHotelFilterLabel();
+  _regPage = 1; renderRegistros(); renderActiveFilters();
+}
+
+function toggleEstadoDropdown() {
+  var panel   = document.getElementById("estadoDropdownPanel");
+  var chevron = document.getElementById("estadoFilterChevron");
+  var isOpen  = panel.style.display !== "none";
+  closeAllFilterDropdowns_("estadoDropdownPanel");
+  if (!isOpen) { panel.style.display = "block"; chevron.className = "bi bi-chevron-up"; }
+}
+
+function setEstadoFilter(val) {
+  _estadoFilter = val;
+  var labels = { "": "Todos", "activo": "Activo", "baja": "Baja" };
+  document.getElementById("estadoFilterLabel").textContent = labels[val] || "Todos";
+  document.getElementById("estadoDropdownPanel").style.display = "none";
+  document.getElementById("estadoFilterChevron").className = "bi bi-chevron-down";
+  _regPage = 1; renderRegistros(); renderActiveFilters();
+}
+
+function toggleDateFilter() {
+  var panel   = document.getElementById("dateDropdownPanel");
+  var chevron = document.getElementById("dateFilterChevron");
+  var isOpen  = panel.style.display !== "none";
+  closeAllFilterDropdowns_("dateDropdownPanel");
+  if (!isOpen) { panel.style.display = "block"; chevron.className = "bi bi-chevron-up"; }
+}
+
+function applyDatePreset(preset) {
+  var today = new Date(); today.setHours(0,0,0,0);
+  var from = null, to = null;
+  if (preset === "hoy")  { from = new Date(today); to = new Date(today); to.setHours(23,59,59,999); }
+  else if (preset === "7d")  { from = new Date(today); from.setDate(today.getDate()-6); to = new Date(today); to.setHours(23,59,59,999); }
+  else if (preset === "30d") { from = new Date(today); from.setDate(today.getDate()-29); to = new Date(today); to.setHours(23,59,59,999); }
+  else if (preset === "mes") { from = new Date(today.getFullYear(), today.getMonth(), 1); to = new Date(today.getFullYear(), today.getMonth()+1, 0, 23,59,59,999); }
+  _dateFrom = from; _dateTo = to;
+  if (from) document.getElementById("dateFrom").value = dateToInputVal_(from);
+  if (to)   document.getElementById("dateTo").value   = dateToInputVal_(to);
+  updateDateFilterLabel_();
+  document.getElementById("dateDropdownPanel").style.display = "none";
+  document.getElementById("dateFilterChevron").className = "bi bi-chevron-down";
+  _regPage = 1; renderRegistros(); renderActiveFilters();
+}
+
+function applyDateFilter() {
+  var fv = document.getElementById("dateFrom").value;
+  var tv = document.getElementById("dateTo").value;
+  _dateFrom = fv ? new Date(fv + "T00:00:00") : null;
+  _dateTo   = tv ? new Date(tv + "T23:59:59") : null;
+  updateDateFilterLabel_();
+  document.getElementById("dateDropdownPanel").style.display = "none";
+  document.getElementById("dateFilterChevron").className = "bi bi-chevron-down";
+  _regPage = 1; renderRegistros(); renderActiveFilters();
+}
+
+function clearDateFilter() {
+  _dateFrom = null; _dateTo = null;
+  document.getElementById("dateFrom").value = "";
+  document.getElementById("dateTo").value   = "";
+  updateDateFilterLabel_();
+  document.getElementById("dateDropdownPanel").style.display = "none";
+  document.getElementById("dateFilterChevron").className = "bi bi-chevron-down";
+  _regPage = 1; renderRegistros(); renderActiveFilters();
+}
+
+function updateDateFilterLabel_() {
+  var lbl = document.getElementById("dateFilterLabel"); if (!lbl) return;
+  if (!_dateFrom && !_dateTo) { lbl.textContent = "Todas las fechas"; }
+  else if (_dateFrom && _dateTo) { lbl.textContent = dateToInputVal_(_dateFrom) + " \u2192 " + dateToInputVal_(_dateTo); }
+  else if (_dateFrom) { lbl.textContent = "Desde " + dateToInputVal_(_dateFrom); }
+  else { lbl.textContent = "Hasta " + dateToInputVal_(_dateTo); }
+}
+
+function dateToInputVal_(d) {
+  if (!d) return "";
+  var pad = function(n) { return String(n).padStart(2, "0"); };
+  return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+}
+
+// ── Hotel filter ──────────────────────────────────────────────
+
+function buildHotelFilterList() {
+  if (!_data) return;
+  _hotelFilterTemp = _hotelFilters.slice();
+  renderHfpList((_data.hoteles || []).map(function(h) { return h.nombre; }), "");
+}
+
+function renderHfpList(hoteles, q) {
+  var list = document.getElementById("hfpList"); if (!list) return; list.innerHTML = "";
+  var lower = (q || "").toLowerCase();
+  var filtered = lower ? hoteles.filter(function(h) { return h.toLowerCase().indexOf(lower) !== -1; }) : hoteles;
+  filtered.forEach(function(h) {
+    var item = document.createElement("label"); item.className = "hfp-item";
+    var checked = _hotelFilterTemp.indexOf(h) !== -1;
+    item.innerHTML = '<input type="checkbox" class="hfp-check" value="' + esc(h) + '" ' + (checked ? "checked" : "") + ' onchange="onHfpCheck(this)"><span class="hfp-name">' + esc(h) + '</span>';
+    list.appendChild(item);
+  });
+}
+
+function filterHfpList() {
+  var q = document.getElementById("hfpSearch") ? document.getElementById("hfpSearch").value : "";
+  renderHfpList((_data && _data.hoteles ? _data.hoteles : []).map(function(h) { return h.nombre; }), q);
+}
+
+function onHfpCheck(cb) {
+  var val = cb.value;
+  if (cb.checked) { if (_hotelFilterTemp.indexOf(val) === -1) _hotelFilterTemp.push(val); }
+  else { _hotelFilterTemp = _hotelFilterTemp.filter(function(h) { return h !== val; }); }
+}
+
+function selectAllHotels() {
+  _hotelFilterTemp = (_data && _data.hoteles ? _data.hoteles : []).map(function(h) { return h.nombre; });
+  document.querySelectorAll(".hfp-check").forEach(function(c) { c.checked = true; });
+}
+
+function clearAllHotels() {
+  _hotelFilterTemp = [];
+  document.querySelectorAll(".hfp-check").forEach(function(c) { c.checked = false; });
+}
+
+function applyHotelFilter() {
+  _hotelFilters = _hotelFilterTemp.slice();
+  updateHotelFilterLabel();
+  toggleHotelFilter(true);
+  _regPage = 1; renderRegistros(); renderActiveFilters();
+}
+
+function updateHotelFilterLabel() {
+  var lbl = document.getElementById("hotelFilterLabel"); if (!lbl) return;
+  var total = _data && _data.hoteles ? _data.hoteles.length : 0;
+  if (!_hotelFilters.length || _hotelFilters.length === total) {
+    lbl.textContent = "Todas las propiedades";
+  } else if (_hotelFilters.length === 1) {
+    lbl.textContent = _hotelFilters[0].length > 22 ? _hotelFilters[0].slice(0,22) + "\u2026" : _hotelFilters[0];
+  } else {
+    lbl.textContent = _hotelFilters.length + " propiedades";
+  }
+}
+
+function toggleHotelFilter(forceClose) {
+  var panel   = document.getElementById("hotelFilterPanel");
+  var chevron = document.getElementById("hotelFilterChevron");
+  var isOpen  = panel.style.display !== "none";
+  if (forceClose || isOpen) {
+    panel.style.display = "none"; chevron.className = "bi bi-chevron-down";
+  } else {
+    closeAllFilterDropdowns_("hotelFilterPanel");
+    _hotelFilterTemp = _hotelFilters.slice();
+    document.getElementById("hfpSearch").value = "";
+    buildHotelFilterList();
+    panel.style.display = "block"; chevron.className = "bi bi-chevron-up";
+  }
+}
+
+function closeAllFilterDropdowns_(exceptId) {
+  var ids = ["estadoDropdownPanel", "dateDropdownPanel"];
+  ids.forEach(function(id) {
+    if (id !== exceptId) { var el = document.getElementById(id); if (el) el.style.display = "none"; }
+  });
+  if (exceptId !== "estadoDropdownPanel") document.getElementById("estadoFilterChevron").className = "bi bi-chevron-down";
+  if (exceptId !== "dateDropdownPanel")   document.getElementById("dateFilterChevron").className   = "bi bi-chevron-down";
+  if (exceptId !== "hotelFilterPanel") {
+    var hfp = document.getElementById("hotelFilterPanel");
+    if (hfp) hfp.style.display = "none";
+    document.getElementById("hotelFilterChevron").className = "bi bi-chevron-down";
+  }
+}
+
+setTimeout(function() {
+  document.addEventListener("click", function(e) {
+    var exportWrap = document.getElementById("exportDropdownWrap");
+    if (exportWrap && !exportWrap.contains(e.target)) closeExportDropdown();
+    ["estadoDropdownWrap","dateDropdownWrap"].forEach(function(wrapId) {
+      var wrap = document.getElementById(wrapId);
+      if (wrap && !wrap.contains(e.target)) {
+        var panelId   = wrapId === "estadoDropdownWrap" ? "estadoDropdownPanel" : "dateDropdownPanel";
+        var chevronId = wrapId === "estadoDropdownWrap" ? "estadoFilterChevron" : "dateFilterChevron";
+        var panel = document.getElementById(panelId); if (panel) panel.style.display = "none";
+        var ch = document.getElementById(chevronId); if (ch) ch.className = "bi bi-chevron-down";
+      }
+    });
+    var panel = document.getElementById("hotelFilterPanel");
+    var btn   = document.getElementById("hotelFilterBtn");
+    if (panel && btn && !panel.contains(e.target) && !btn.contains(e.target)) {
+      if (panel.style.display !== "none") toggleHotelFilter(true);
+    }
+  });
+}, 0);
+
+// ── Filtered list ─────────────────────────────────────────────
+
+function getFilteredRegistros() {
+  if (!_data) return [];
+  var list = _data.registros || [];
+  if (_estadoFilter) list = list.filter(function(r) { return r.estado === _estadoFilter; });
+  if (_hotelFilters.length) list = list.filter(function(r) { return r.hoteles.some(function(h) { return _hotelFilters.indexOf(h) !== -1; }); });
+  if (_dateFrom || _dateTo) {
+    list = list.filter(function(r) {
+      var raw = r.synced_at || r.creado;
+      if (!raw) return false;
+      var d = parseDateStr_(raw); if (!d) return false;
+      if (_dateFrom && d < _dateFrom) return false;
+      if (_dateTo   && d > _dateTo)   return false;
+      return true;
+    });
+  }
+  if (_regSearch) {
+    list = list.filter(function(r) {
+      var hay = [r.nombre, r.apellido, r.correo, r.telefono, r.cedula, r.hotel_raw].join(" ").toLowerCase();
+      return hay.indexOf(_regSearch) !== -1;
+    });
+  }
+  return list;
+}
+
+function parseDateStr_(s) {
+  if (!s) return null;
+  var m = String(s).match(/(\d{4})\/(\d{2})\/(\d{2}),\s*(\d+):(\d+):(\d+)\s*(AM|PM)/i);
+  if (!m) return null;
+  var y=m[1], mo=m[2], d=m[3], h=parseInt(m[4],10), mi=m[5], se=m[6], ap=m[7];
+  if (ap.toUpperCase() === "PM" && h < 12) h += 12;
+  if (ap.toUpperCase() === "AM" && h === 12) h = 0;
+  return new Date(+y, +mo-1, +d, h, +mi, +se);
+}
+
+// ── Pagination ────────────────────────────────────────────────
+
+function changePageSize() {
+  _pageSize = parseInt(document.getElementById("pageSizeSelect").value, 10);
+  _regPage = 1; renderRegistros();
+}
+
+function renderPageNav(total, page, pageSize) {
+  var nav = document.getElementById("pageNav"); if (!nav) return;
+  var totalPages = Math.max(1, Math.ceil(total / pageSize));
+  if (totalPages <= 1) { nav.innerHTML = ""; return; }
+  var html = '<button class="pag-btn" ' + (page <= 1 ? "disabled" : "") + ' onclick="goPage(' + (page-1) + ')"><i class="bi bi-chevron-left"></i></button>';
+  var start = Math.max(1, page-2), end = Math.min(totalPages, start+4);
+  start = Math.max(1, end-4);
+  if (start > 1) html += '<button class="pag-btn" onclick="goPage(1)">1</button>' + (start > 2 ? '<span class="pag-dots">\u2026</span>' : "");
+  for (var p = start; p <= end; p++) html += '<button class="pag-btn ' + (p === page ? "active" : "") + '" onclick="goPage(' + p + ')">' + p + '</button>';
+  if (end < totalPages) html += (end < totalPages-1 ? '<span class="pag-dots">\u2026</span>' : "") + '<button class="pag-btn" onclick="goPage(' + totalPages + ')">' + totalPages + '</button>';
+  html += '<button class="pag-btn" ' + (page >= totalPages ? "disabled" : "") + ' onclick="goPage(' + (page+1) + ')"><i class="bi bi-chevron-right"></i></button>';
+  nav.innerHTML = html;
+}
+
+function goPage(p) {
+  _regPage = p; renderRegistros();
+  var tw = document.getElementById("tableWrap");
+  if (tw) tw.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ── Render table ──────────────────────────────────────────────
+
+function renderRegistros() {
+  if (!_data) return;
+  var all = getFilteredRegistros(), total = all.length;
+  var start = (_regPage-1) * _pageSize;
+  var list  = all.slice(start, start + _pageSize);
+  var tbody = document.getElementById("tablaBody"); tbody.innerHTML = "";
+  var chkAllEl = document.getElementById("checkAll");
+  if (chkAllEl) { chkAllEl.checked = false; chkAllEl.indeterminate = false; }
+  list.forEach(function(r) {
+    var tr = document.createElement("tr"); tr.className = "reg-row";
+    tr.setAttribute("data-correo", r.correo);
+    var pressTimer;
+    tr.addEventListener("pointerdown", function() { pressTimer = setTimeout(function() { openDrawer(r); }, 500); });
+    tr.addEventListener("pointerup",   function() { clearTimeout(pressTimer); });
+    tr.addEventListener("pointerleave",function() { clearTimeout(pressTimer); });
+    tr.innerHTML =
+      '<td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" value="' + esc(r.correo) + '" onchange="onRowCheck()"></td>' +
+      '<td><div class="cell-name">' + esc(r.nombre) + " " + esc(r.apellido) + '</div><div class="cell-sub">' + esc(r.cedula) + '</div></td>' +
+      '<td><a href="mailto:' + esc(r.correo) + '" class="table-link" onclick="event.stopPropagation()">' + esc(r.correo) + '</a></td>' +
+      '<td class="col-hide-sm">' + esc(r.telefono) + '</td>' +
+      '<td>' + renderHotelBadges(r.hoteles) + '</td>' +
+      '<td>' + estadoBadge(r.estado) + '</td>' +
+      '<td class="cell-mono col-hide-md">' + esc(r.synced_at || "\u2014") + '</td>' +
+      '<td onclick="event.stopPropagation()"><button class="row-btn" onclick="openDrawer(' + esc(JSON.stringify(r)) + ')" title="Ver detalle"><i class="bi bi-chevron-right"></i></button></td>';
+    tbody.appendChild(tr);
+  });
+  var showing = Math.min(start + _pageSize, total);
+  setText("tablaCount", total === 0 ? "Sin resultados" : "Mostrando " + (start+1) + "\u2013" + showing + " de " + total + " registro" + (total !== 1 ? "s" : ""));
+  renderPageNav(total, _regPage, _pageSize);
+}
+
+function renderHotelBadges(hoteles) {
+  if (!hoteles || !hoteles.length) return '<span class="cell-sub">\u2014</span>';
+  var first = '<span class="hotel-badge">' + esc(hoteles[0]) + '</span>';
+  return hoteles.length === 1 ? first : first + '<span class="hotel-badge hotel-badge-more">+' + (hoteles.length-1) + '</span>';
+}
+
+function estadoBadge(estado) {
+  return estado === "activo"
+    ? '<span class="badge badge-active">Activo</span>'
+    : '<span class="badge badge-baja">Baja</span>';
+}
+
+// ── Bulk actions ──────────────────────────────────────────────
+
+function onRowCheck() {
+  var all     = document.querySelectorAll(".row-check");
+  var checked = document.querySelectorAll(".row-check:checked");
+  var bar     = document.getElementById("bulkBar");
+  var cnt     = document.getElementById("bulkCount");
+  var chkAll  = document.getElementById("checkAll");
+  if (checked.length > 0) {
+    bar.style.display = "flex";
+    cnt.textContent = checked.length + " seleccionado" + (checked.length !== 1 ? "s" : "");
+  } else {
+    bar.style.display = "none";
+  }
+  if (chkAll) {
+    if (checked.length === 0) { chkAll.checked = false; chkAll.indeterminate = false; }
+    else if (checked.length === all.length) { chkAll.checked = true; chkAll.indeterminate = false; }
+    else { chkAll.checked = false; chkAll.indeterminate = true; }
+  }
+}
+
+function toggleCheckAll() {
+  var chkAll = document.getElementById("checkAll");
+  var target = chkAll.indeterminate ? true : chkAll.checked;
+  chkAll.indeterminate = false;
+  document.querySelectorAll(".row-check").forEach(function(c) { c.checked = target; });
+  onRowCheck();
+}
+
+function deselectAll() {
+  document.getElementById("checkAll").checked = false;
+  document.querySelectorAll(".row-check").forEach(function(c) { c.checked = false; });
+  document.getElementById("bulkBar").style.display = "none";
+}
+
+function getCheckedCorreos() {
+  return Array.from(document.querySelectorAll(".row-check:checked")).map(function(c) { return c.value; });
+}
+
+function bulkAction(action) {
+  var correos = getCheckedCorreos(); if (!correos.length) return;
+  var nuevoEstado = action === "activar" ? 1 : 0;
+  var label = action === "activar" ? "activados" : "dados de baja";
+  var n = correos.length;
+  if (action === "desactivar") {
+    oxoConfirm({
+      title: "Dar de baja (" + n + ")",
+      msg: "¿Seguro que deseas dar de baja a " + n + " usuario" + (n !== 1 ? "s" : "") + "? Los registros quedarán inactivos.",
+      okLabel: "Dar de baja",
+      danger: true,
+      onOk: function() { _doBulkUpdate_(correos, nuevoEstado, label); }
+    });
+  } else {
+    _doBulkUpdate_(correos, nuevoEstado, label);
+  }
+}
+
+function _doBulkUpdate_(correos, nuevoEstado, label) {
+  showToast("Guardando cambios\u2026", "info");
+  google.script.run
+    .withSuccessHandler(function() { showToast(correos.length + " usuario" + (correos.length !== 1 ? "s" : "") + " " + label, "success"); deselectAll(); loadData(true); })
+    .withFailureHandler(function(e) { showToast(_errMsg_(e), "error"); })
+    .bulkUpdateEstado(correos, nuevoEstado);
+}
+
+// ── Drawer ────────────────────────────────────────────────────
+
+var _currentDrawerRecord = null;
+
+function openDrawer(r) {
+  _currentDrawerRecord = r;
+  var drawer = document.getElementById("drawer");
+  drawer.setAttribute("aria-hidden", "false");
+  drawer.classList.add("is-open");
+  document.body.classList.add("no-scroll");
+  document.getElementById("drawerTitle").textContent = r.nombre + " " + r.apellido;
+  var hotelList = (r.hoteles || []).map(function(h) { return '<div class="detail-hotel">' + esc(h) + '</div>'; }).join("") || "\u2014";
+  document.getElementById("drawerBody").innerHTML =
+    '<div class="detail-section"><div class="detail-badge-wrap">' + estadoBadge(r.estado) + '</div></div>' +
+    '<div class="detail-section"><div class="detail-label">Identificaci\u00f3n</div><div class="detail-row"><span>' + esc(r.tipo_doc) + '</span><span class="detail-mono">' + esc(r.cedula) + '</span></div></div>' +
+    '<div class="detail-section"><div class="detail-label">Contacto</div>' +
+      '<div class="detail-row"><i class="bi bi-envelope"></i> <a href="mailto:' + esc(r.correo) + '" class="table-link">' + esc(r.correo) + '</a></div>' +
+      '<div class="detail-row"><i class="bi bi-telephone"></i> ' + esc(r.telefono) + '</div></div>' +
+    '<div class="detail-section"><div class="detail-label">Fecha de nacimiento</div><div class="detail-row">' + (esc(r.fecha_nac) || "\u2014") + '</div></div>' +
+    '<div class="detail-section"><div class="detail-label">Propiedades vinculadas</div>' + hotelList + '</div>' +
+    '<div class="detail-section"><div class="detail-label">Sincronizaci\u00f3n</div><div class="detail-row">' + syncBadge(r.sync) + '</div></div>' +
+    '<div class="detail-section"><div class="detail-label">Fecha de sincronizaci\u00f3n</div><div class="detail-row detail-mono">' + esc(r.synced_at || "\u2014") + '</div></div>' +
+    (r.ip ? '<div class="detail-section"><div class="detail-label">IP origen</div><div class="detail-row"><span class="detail-mono">' + esc(r.ip) + '</span></div></div>' : "");
+  document.getElementById("drawerFooter").innerHTML =
+    '<button class="drawer-action-btn" onclick="openEditModal()"><i class="bi bi-pencil"></i> Editar</button>' +
+    '<button class="drawer-action-btn ' + (r.estado === "activo" ? "btn-baja" : "btn-activar") + '" onclick="toggleEstadoFromDrawer()">' +
+      (r.estado === "activo" ? '<i class="bi bi-person-dash"></i> Dar de baja' : '<i class="bi bi-person-check"></i> Activar') +
+    '</button>';
+}
+
+function closeDrawer() {
+  var d = document.getElementById("drawer");
+  d.classList.remove("is-open");
+  d.setAttribute("aria-hidden", "true");
+  _currentDrawerRecord = null;
+  document.body.classList.remove("no-scroll");
+}
+
+function toggleEstadoFromDrawer() {
+  if (!_currentDrawerRecord) return;
+  var r = _currentDrawerRecord;
+  var esDarDeBaja = r.estado === "activo";
+  var nuevoEstado = esDarDeBaja ? 0 : 1;
+  if (esDarDeBaja) {
+    oxoConfirm({
+      title: "Dar de baja",
+      msg: "¿Seguro que deseas dar de baja a " + r.nombre + " " + r.apellido + "? El registro quedará inactivo.",
+      okLabel: "Dar de baja",
+      danger: true,
+      onOk: function() { _doToggleEstado_(r, nuevoEstado); }
+    });
+  } else {
+    _doToggleEstado_(r, nuevoEstado);
+  }
+}
+
+function _doToggleEstado_(r, nuevoEstado) {
+  showToast("Guardando\u2026", "info");
+  google.script.run
+    .withSuccessHandler(function() { showToast("Estado actualizado", "success"); closeDrawer(); loadData(true); })
+    .withFailureHandler(function(e) { showToast(_errMsg_(e), "error"); })
+    .bulkUpdateEstado([r.correo], nuevoEstado);
+}
+
+function syncBadge(s) {
+  var map = { "SINCRONIZADO": ["badge-active","Sincronizado"], "PENDIENTE": ["badge-pending","Pendiente"], "ERROR": ["badge-error","Error"] };
+  var item = map[s] || ["badge-baja", s || "Desconocido"];
+  return '<span class="badge ' + item[0] + '">' + item[1] + '</span>';
+}
+
+// ── Edit modal ────────────────────────────────────────────────
+
+function openEditModal() {
+  var r = _currentDrawerRecord; if (!r) return;
+  document.getElementById("editModalBody").innerHTML =
+    '<div class="edit-grid">' +
+      '<div class="edit-field"><label class="edit-label">Nombre(s)</label><input type="text" id="ef_nombre" class="edit-input" value="' + esc(r.nombre) + '" maxlength="50" autocomplete="given-name"></div>' +
+      '<div class="edit-field"><label class="edit-label">Apellido(s)</label><input type="text" id="ef_apellido" class="edit-input" value="' + esc(r.apellido) + '" maxlength="50" autocomplete="family-name"></div>' +
+      '<div class="edit-field"><label class="edit-label">Correo <span class="edit-req">*</span></label><input type="email" id="ef_correo" class="edit-input" value="' + esc(r.correo) + '" maxlength="50" autocomplete="email" inputmode="email"></div>' +
+      '<div class="edit-field"><label class="edit-label">Tel\u00e9fono</label><input type="text" id="ef_telefono" class="edit-input" value="' + esc(r.telefono) + '" maxlength="16" inputmode="numeric"></div>' +
+      '<div class="edit-field edit-field-full"><label class="edit-label">Estado</label><select id="ef_estado" class="edit-input edit-select"><option value="1" ' + (r.estado === "activo" ? "selected" : "") + '>Activo</option><option value="0" ' + (r.estado !== "activo" ? "selected" : "") + '>Baja / Inactivo</option></select></div>' +
+    '</div>';
+  attachEditSanitizers_();
+  document.getElementById("editModal").style.display = "flex";
+  document.body.classList.add("no-scroll");
+}
+
+function attachEditSanitizers_() {
+  ["ef_nombre","ef_apellido"].forEach(function(id) {
+    var el = document.getElementById(id); if (!el) return;
+    var allowed = /[^A-Za-z\xC0-\xFF\s'.\-]/g;
+    var sanitize = function() { el.value = el.value.replace(allowed,"").replace(/\s{2,}/g," "); };
+    el.addEventListener("input", sanitize);
+    el.addEventListener("paste", function() { setTimeout(sanitize, 0); });
+  });
+  var tel = document.getElementById("ef_telefono");
+  if (tel) {
+    var ts = function() { tel.value = tel.value.replace(/\D/g,"").slice(0,16); };
+    tel.addEventListener("input", ts);
+    tel.addEventListener("paste", function() { setTimeout(ts, 0); });
+  }
+  var email = document.getElementById("ef_correo");
+  if (email) {
+    var es = function() {
+      var v = email.value.replace(/\s/g,"");
+      var at = v.indexOf("@");
+      if (at !== -1) v = v.slice(0, at+1) + v.slice(at+1).replace(/@/g,"");
+      email.value = v.slice(0,50);
+    };
+    email.addEventListener("input", es);
+    email.addEventListener("paste", function() { setTimeout(es, 0); });
+  }
+}
+
+function closeEditModal(e) {
+  if (e && e.target !== document.getElementById("editModal")) return;
+  _closeEditModalNow_();
+}
+
+function closeEditModalBtn() { _closeEditModalNow_(); }
+
+function _closeEditModalNow_() {
+  document.getElementById("editModal").style.display = "none";
+  document.body.classList.remove("no-scroll");
+}
+
+function saveEdit() {
+  var r = _currentDrawerRecord; if (!r) return;
+  var nombre   = (document.getElementById("ef_nombre")   ? document.getElementById("ef_nombre").value   : "").trim();
+  var apellido = (document.getElementById("ef_apellido") ? document.getElementById("ef_apellido").value : "").trim();
+  var correo   = (document.getElementById("ef_correo")   ? document.getElementById("ef_correo").value   : "").trim().toLowerCase();
+  var telefono = (document.getElementById("ef_telefono") ? document.getElementById("ef_telefono").value : "").replace(/\D/g,"");
+  var estado   = parseInt(document.getElementById("ef_estado") ? document.getElementById("ef_estado").value : "1", 10);
+  var nameRe   = /^[A-Za-z\xC0-\xFF\s'.\-]{1,50}$/;
+  if (!nombre)               return showToast("Nombre es obligatorio", "error");
+  if (!nameRe.test(nombre))  return showToast("Nombre: solo letras, espacios y . - '", "error");
+  if (!apellido)             return showToast("Apellido es obligatorio", "error");
+  if (!nameRe.test(apellido))return showToast("Apellido: solo letras, espacios y . - '", "error");
+  if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return showToast("Correo inv\u00e1lido", "error");
+  if (!/^[0-9]{6,16}$/.test(telefono)) return showToast("Tel\u00e9fono: 6-16 d\u00edgitos", "error");
+  var payload = { correo_original: r.correo, nombre: nombre, apellido: apellido, correo: correo, telefono: telefono, estado: estado };
+  showToast("Guardando\u2026", "info");
+  google.script.run
+    .withSuccessHandler(function() {
+      document.getElementById("editModal").style.display = "none";
+      document.body.classList.remove("no-scroll");
+      showToast("Cambios guardados", "success");
+      closeDrawer();
+      loadData(true);
+    })
+    .withFailureHandler(function(e) { showToast(_errMsg_(e), "error"); })
+    .updateRegistro(payload);
+}
+
+// ── Exports ───────────────────────────────────────────────────
+
+function getExportRows(forcedList) {
+  var list = forcedList || getFilteredRegistros();
+  var headers = ["Nombre","Apellido","Tipo Doc","C\u00e9dula","Correo","Tel\u00e9fono","F. Nacimiento","Hoteles","Estado","Sincronizaci\u00f3n","Sincronizado","IP"];
+  var rows = list.map(function(r) { return [r.nombre,r.apellido,r.tipo_doc,r.cedula,r.correo,r.telefono,r.fecha_nac,r.hoteles.join("; "),r.estado,r.sync,r.synced_at,r.ip]; });
+  return { headers: headers, rows: rows };
+}
+
+function getSelectedRecords() {
+  if (!_data) return null;
+  var correos = new Set(getCheckedCorreos()); if (!correos.size) return null;
+  return (_data.registros || []).filter(function(r) { return correos.has(r.correo); });
+}
+
+function exportSelectedCSV()  { var sel=getSelectedRecords(); if(!sel||!sel.length) return showToast("No hay seleccionados","error"); var x=getExportRows(sel); downloadText("oxopartners_seleccionados.csv",[x.headers].concat(x.rows).map(function(r){return r.map(function(v){return '"'+String(v||"").replace(/"/g,'""')+'"';}).join(",");}).join("\r\n"),"text/csv"); closeExportDropdown(); }
+function exportSelectedXLSX() { var sel=getSelectedRecords(); if(!sel||!sel.length) return showToast("No hay seleccionados","error"); _exportXLSXFrom(sel,"oxopartners_seleccionados.xls"); closeExportDropdown(); }
+function exportSelectedPDF()  { var sel=getSelectedRecords(); if(!sel||!sel.length) return showToast("No hay seleccionados","error"); exportPDFFromList_(sel); closeExportDropdown(); }
+function exportCSV()  { var x=getExportRows(); downloadText("oxopartners_registros.csv",[x.headers].concat(x.rows).map(function(r){return r.map(function(v){return '"'+String(v||"").replace(/"/g,'""')+'"';}).join(",");}).join("\r\n"),"text/csv"); }
+function exportXLSX() { _exportXLSXFrom(null,"oxopartners_registros.xls"); }
+function exportPDF()  { exportPDFFromList_(null); }
+
+function downloadText(name, content, type) {
+  var blob = new Blob(["\uFEFF"+content], {type:type}), url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
+}
+
+function _exportXLSXFrom(forcedList, filename) {
+  var x = getExportRows(forcedList);
+  var trs = [x.headers].concat(x.rows).map(function(row){return "<tr>"+row.map(function(c){return "<td>"+String(c||"").replace(/</g,"&lt;")+"</td>";}).join("")+"</tr>";}).join("");
+  var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>td{mso-number-format:"@";}</style></head><body><table>'+trs+'</table></body></html>';
+  var blob = new Blob([html],{type:"application/vnd.ms-excel"}), url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+}
+
+function exportPDFFromList_(forcedList) {
+  var x = getExportRows(forcedList);
+  var now = new Date().toLocaleString("es-CO");
+  var label = forcedList ? (x.rows.length + " seleccionados") : (x.rows.length + " registros");
+  var ths = x.headers.map(function(h){return "<th>"+String(h||"").replace(/</g,"&lt;")+"</th>";}).join("");
+  var trs = x.rows.map(function(r){return "<tr>"+r.map(function(c){return "<td>"+String(c||"").replace(/</g,"&lt;")+"</td>";}).join("")+"</tr>";}).join("");
+  var html = '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>OxoPartners</title><style>@page{size:A4 landscape;margin:14mm 10mm;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:9.5px;}.doc-header{display:flex;align-items:center;justify-content:space-between;padding:0 0 10px;border-bottom:2px solid #333;margin-bottom:12px;}.doc-title{font-size:14px;font-weight:700;}.doc-meta{font-size:9px;color:#666;text-align:right;line-height:1.6;}table{width:100%;border-collapse:collapse;}thead tr{background:#2c2c2c;}thead th{color:#fff;padding:6px 8px;text-align:left;font-size:8.5px;font-weight:700;border:1px solid #2c2c2c;}tbody td{padding:5px 7px;border:1px solid #ddd;font-size:9px;}tbody tr:nth-child(odd) td{background:#f7f7f7;}</style></head><body><div class="doc-header"><div class="doc-title">OxoPartners &nbsp;&middot;&nbsp; Registros</div><div class="doc-meta">Exportado: '+now+'<br>Total: '+label+'</div></div><table><thead><tr>'+ths+'</tr></thead><tbody>'+trs+'</tbody></table></body></html>';
+  var blob = new Blob([html],{type:"text/html;charset=utf-8"}), url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = forcedList ? "oxopartners_seleccionados.html" : "oxopartners_registros.html";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+</script>

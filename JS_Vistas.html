@@ -1,0 +1,80 @@
+<script>
+// ══════════════════════════════════════════════════════════════
+//  Oxo Partners · Admin · Vistas (Resumen, Hoteles, Actividad)
+// ══════════════════════════════════════════════════════════════
+
+function renderResumen() {
+  if (!_data) return;
+  var r = _data.resumen;
+  setText("kpiTotal", r.total); setText("kpiActivos", r.activos); setText("kpiBajas", r.bajas); setText("kpiUpdated", r.ultima_actualizacion);
+  renderChart("chart7dias", r.dias7, "#8A6E3D");
+  renderBarList("hotelesResumen", (_data.hoteles || []).slice(0,6), function(h){return h.nombre;}, function(h){return h.count;}, r.totalVinculos || 1, "#8A6E3D");
+}
+
+function renderHoteles() {
+  if (!_data) return;
+  var hoteles = _data.hoteles || [], r = _data.resumen;
+  setText("kpiPropUniq", r.propUniq || hoteles.length); setText("kpiVinculos", r.totalVinculos || 0); setText("kpiTop1", hoteles[0] ? hoteles[0].nombre : "\u2014");
+  var max = hoteles[0] ? hoteles[0].count : 1;
+  var wrap = document.getElementById("hotelesBarras"); wrap.innerHTML = "";
+  hoteles.forEach(function(h, i) {
+    var pct = Math.round((h.count / Math.max(max,1)) * 100);
+    var row = document.createElement("div"); row.className = "hotel-bar-row";
+    row.innerHTML = '<div class="hbar-rank">' + (i+1) + '</div><div class="hbar-info"><div class="hbar-name">' + esc(h.nombre) + '</div><div class="hbar-track"><div class="hbar-fill" style="width:' + pct + '%"></div></div></div><div class="hbar-count">' + h.count + '</div>';
+    wrap.appendChild(row);
+  });
+  if (!hoteles.length) wrap.innerHTML = '<p class="empty-msg">Sin datos.</p>';
+}
+
+function renderActividad() {
+  if (!_data) return;
+  var a = _data.actividad, s = _data.sync_stats || {};
+  setText("kpiHoy", a.nuevosHoy); setText("kpiNuevos7", a.nuevos7); setText("kpiNuevos30", a.nuevos30); setText("kpiTendencia", a.tendencia7);
+  renderChart("chartActividad", a.dias7, "#8A6E3D");
+  renderBarList("hotelesActividad", (_data.hoteles || []).slice(0,6), function(h){return h.nombre;}, function(h){return h.count;}, (_data.resumen && _data.resumen.totalVinculos ? _data.resumen.totalVinculos : 1), "#8A6E3D");
+  document.getElementById("syncStats").innerHTML =
+    '<div class="sync-item sync-pending"><i class="bi bi-hourglass-split"></i><div class="sync-val">' + (s.pendiente||0) + '</div><div class="sync-lbl">Pendiente</div></div>' +
+    '<div class="sync-item sync-ok"><i class="bi bi-cloud-check-fill"></i><div class="sync-val">' + (s.sincronizado||0) + '</div><div class="sync-lbl">Sincronizado</div></div>' +
+    '<div class="sync-item sync-err"><i class="bi bi-exclamation-circle-fill"></i><div class="sync-val">' + (s.error||0) + '</div><div class="sync-lbl">Error</div></div>';
+}
+
+function renderChart(containerId, dias7, color) {
+  var el = document.getElementById(containerId); if (!el) return;
+  if (!dias7 || !dias7.length) { el.innerHTML = '<p class="empty-msg">Sin datos disponibles.</p>'; return; }
+  var max = Math.max.apply(null, dias7.map(function(d){return d.count;}).concat([1]));
+  var W = el.offsetWidth || 500, H = 140, pad = {l:32,r:10,t:12,b:30};
+  var bW = Math.floor((W-pad.l-pad.r)/dias7.length), bGap = Math.max(3, Math.floor(bW*0.2));
+  var gridCount = 4, gridLines = "";
+  for (var i = 0; i <= gridCount; i++) {
+    var y = pad.t + ((H-pad.t-pad.b)*i/gridCount);
+    var v = Math.round(max*(gridCount-i)/gridCount);
+    gridLines += '<line x1="' + pad.l + '" y1="' + y + '" x2="' + (W-pad.r) + '" y2="' + y + '" stroke="#e5e5e5" stroke-width="1"/>';
+    if (i < gridCount) gridLines += '<text x="' + (pad.l-4) + '" y="' + (y+4) + '" text-anchor="end" font-size="9" fill="#aaa">' + v + '</text>';
+  }
+  var bars = "", labels = "", values = "";
+  dias7.forEach(function(d, i) {
+    var x = pad.l + i*bW, bh = d.count === 0 ? 2 : Math.max(4, Math.round(((H-pad.t-pad.b)*d.count)/max));
+    var yb = H-pad.b-bh, cx = x+bW/2, op = 0.45+0.55*(d.count/max);
+    bars   += '<rect x="' + (x+bGap/2) + '" y="' + yb + '" width="' + (bW-bGap) + '" height="' + bh + '" rx="4" fill="' + color + '" opacity="' + op + '"/>';
+    labels += '<text x="' + cx + '" y="' + (H-6) + '" text-anchor="middle" font-size="9.5" fill="#999">' + d.fecha + '</text>';
+    if (d.count > 0) values += '<text x="' + cx + '" y="' + (yb-4) + '" text-anchor="middle" font-size="9.5" font-weight="700" fill="' + color + '">' + d.count + '</text>';
+  });
+  el.innerHTML = '<svg width="100%" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" style="overflow:visible;font-family:\'DM Sans\',system-ui,sans-serif">' + gridLines + bars + labels + values + '</svg>';
+}
+
+function renderBarList(containerId, items, labelFn, valueFn, maxVal, color) {
+  var el = document.getElementById(containerId); if (!el) return;
+  if (!items || !items.length) { el.innerHTML = '<p class="empty-msg">Sin datos.</p>'; return; }
+  el.innerHTML = items.map(function(item, i) {
+    var pct = Math.round((valueFn(item) / Math.max(maxVal,1)) * 100);
+    return '<div class="bar-row">' +
+      '<span class="bar-rank">' + (i+1) + '</span>' +
+      '<div class="bar-info">' +
+        '<div class="bar-label">' + esc(labelFn(item)) + '</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div>' +
+      '</div>' +
+      '<span class="bar-val">' + valueFn(item) + '</span>' +
+    '</div>';
+  }).join("");
+}
+</script>

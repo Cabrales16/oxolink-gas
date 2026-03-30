@@ -1,0 +1,283 @@
+<script>
+// ══════════════════════════════════════════════════════════════
+//  Oxo Partners · Admin · JavaScript  (core)
+// ══════════════════════════════════════════════════════════════
+
+// ── Estado global ─────────────────────────────────────────────
+
+let _data            = null;
+let _currentView     = "resumen";
+let _regSearch       = "";
+let _estadoFilter    = "";
+let _hotelFilters    = [];
+let _hotelFilterTemp = [];
+let _dateFrom        = null;
+let _dateTo          = null;
+let _regPage         = 1;
+let _pageSize        = 25;
+let _sidebarHoverTimer = null;
+
+// ── Utilidades de error ───────────────────────────────────────
+
+function _errMsg_(e) {
+  let m = (e && e.message) ? e.message : String(e || "Error desconocido");
+  m = m.replace(/^(Error:\s*)+/i, "");
+  const pipe = m.indexOf("|");
+  if (pipe !== -1) m = m.slice(pipe + 1).trim();
+  return m.trim() || "Error desconocido";
+}
+
+// ── Helpers globales ──────────────────────────────────────────
+
+function setText(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = (val !== undefined && val !== null) ? val : "\u2014";
+}
+
+function esc(s) {
+  return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+
+// ── Confirm modal ─────────────────────────────────────────────
+
+var _confirmCallback_ = null;
+
+function oxoConfirm(opts) {
+  document.getElementById("confirmTitle").textContent = opts.title || "¿Confirmar acción?";
+  document.getElementById("confirmMsg").textContent   = opts.msg   || "";
+  var okBtn = document.getElementById("confirmOkBtn");
+  okBtn.textContent = opts.okLabel || "Confirmar";
+  okBtn.className = "modal-btn " + (opts.danger === false ? "modal-btn-save" : "modal-btn-danger");
+  _confirmCallback_ = function() { closeConfirm(); if (opts.onOk) opts.onOk(); };
+  document.getElementById("confirmModal").style.display = "flex";
+  document.body.classList.add("no-scroll");
+}
+
+function closeConfirm() {
+  document.getElementById("confirmModal").style.display = "none";
+  _confirmCallback_ = null;
+  document.body.classList.remove("no-scroll");
+}
+
+setTimeout(function() {
+  var cm = document.getElementById("confirmModal");
+  if (cm) cm.addEventListener("click", function(e) {
+    if (e.target === this) closeConfirm();
+  });
+
+  var lp = document.getElementById("loginPwd");
+  if (lp) lp.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") handleLogin();
+  });
+
+  var lt = document.getElementById("loginToggle");
+  if (lt) lt.addEventListener("click", function() {
+    var inp  = document.getElementById("loginPwd");
+    var icon = document.querySelector("#loginToggle i");
+    if (inp.type === "password") { inp.type = "text";     icon.className = "bi bi-eye-slash"; }
+    else                         { inp.type = "password"; icon.className = "bi bi-eye"; }
+  });
+}, 0);
+
+// ── Auth ──────────────────────────────────────────────────────
+
+function handleLogin() {
+  const pwdEl  = document.getElementById("loginPwd");
+  const btn    = document.getElementById("loginBtn");
+  const err    = document.getElementById("loginError");
+  const toggle = document.getElementById("loginToggle");
+  const pwd    = pwdEl.value;
+  err.style.display = "none";
+  pwdEl.disabled = true; pwdEl.style.opacity = "0.6";
+  if (toggle) toggle.disabled = true;
+  btn.disabled = true;
+  btn.innerHTML = `<span>Verificando\u2026</span><div class="btn-spin"></div>`;
+  google.script.run
+    .withSuccessHandler(function(ok) {
+      if (ok) {
+        document.getElementById("loginScreen").style.display = "none";
+        document.getElementById("adminShell").style.display = "flex";
+        document.getElementById("adminShell").style.flexDirection = "row";
+        loadData();
+      } else {
+        pwdEl.disabled = false; pwdEl.style.opacity = "";
+        if (toggle) toggle.disabled = false;
+        btn.disabled = false;
+        btn.innerHTML = `<span>Ingresar</span><i class="bi bi-arrow-right"></i>`;
+        err.style.display = "flex";
+        pwdEl.value = ""; pwdEl.focus();
+      }
+    })
+    .withFailureHandler(function() {
+      pwdEl.disabled = false; pwdEl.style.opacity = "";
+      if (toggle) toggle.disabled = false;
+      btn.disabled = false;
+      btn.innerHTML = `<span>Ingresar</span><i class="bi bi-arrow-right"></i>`;
+      err.style.display = "flex";
+    })
+    .verifyPassword(pwd);
+}
+
+document.getElementById("loginPwd").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") handleLogin();
+});
+
+document.getElementById("loginToggle").addEventListener("click", function() {
+  const inp  = document.getElementById("loginPwd");
+  const icon = document.querySelector("#loginToggle i");
+  if (inp.type === "password") { inp.type = "text";     icon.className = "bi bi-eye-slash"; }
+  else                         { inp.type = "password"; icon.className = "bi bi-eye"; }
+});
+
+function handleLogout() {
+  document.getElementById("adminShell").style.display = "none";
+  document.getElementById("loginScreen").style.display = "flex";
+  const pwdEl  = document.getElementById("loginPwd");
+  const btn    = document.getElementById("loginBtn");
+  const toggle = document.getElementById("loginToggle");
+  const err    = document.getElementById("loginError");
+  pwdEl.disabled = false; pwdEl.style.opacity = ""; pwdEl.value = ""; pwdEl.type = "password";
+  if (toggle) toggle.disabled = false;
+  var icon = document.querySelector("#loginToggle i");
+  if (icon) icon.className = "bi bi-eye";
+  btn.disabled = false;
+  btn.innerHTML = `<span>Ingresar</span><i class="bi bi-arrow-right"></i>`;
+  if (err) err.style.display = "none";
+  _data = null;
+  _indInitialized = false;
+  _indHistorico   = null;
+}
+
+// ── Data loading ──────────────────────────────────────────────
+
+function loadData(silent) {
+  if (!silent) {
+    document.getElementById("globalLoader").style.display = "flex";
+    hideAllViews();
+  }
+  setStatus("loading");
+  google.script.run
+    .withSuccessHandler(function(data) {
+      _data = data;
+      document.getElementById("globalLoader").style.display = "none";
+      setStatus("ok");
+      setSidebarUpdated();
+      buildHotelFilterList();
+      renderCurrentView();
+      _indInitialized = false;
+    })
+    .withFailureHandler(function() {
+      document.getElementById("globalLoader").style.display = "none";
+      setStatus("error");
+      showToast("Error al cargar datos", "error");
+    })
+    .getAllData();
+}
+
+function refreshData() {
+  var icon = document.getElementById("refreshIcon");
+  if (icon) icon.style.animation = "spin 0.8s linear infinite";
+  loadData(true);
+  if (_currentView === "indicadores") {
+    _indInitialized = false;
+    _refreshIndicadores_();
+  }
+  setTimeout(function() { if (icon) icon.style.animation = ""; }, 1800);
+}
+
+// ── Navigation ────────────────────────────────────────────────
+
+var VIEW_TITLES = {
+  "resumen": "Resumen",
+  "registros": "Registros",
+  "hoteles": "Hoteles",
+  "actividad": "Actividad",
+  "indicadores": "Indicadores",
+  "campanas": "Campañas"
+};
+
+function navigate(view) {
+  _currentView = view;
+  document.querySelectorAll(".nav-item").forEach(function(el) {
+    el.classList.toggle("active", el.dataset.view === view);
+  });
+  document.getElementById("topbarTitle").textContent = VIEW_TITLES[view] || view;
+  renderCurrentView();
+  if (window.innerWidth < 900) closeSidebar();
+}
+
+function hideAllViews() {
+  document.querySelectorAll(".view").forEach(function(v) { v.style.display = "none"; });
+}
+
+function renderCurrentView() {
+  hideAllViews();
+  var el = document.getElementById("view-" + _currentView);
+  if (el) el.style.display = "block";
+  if (!_data) return;
+  if (_currentView === "resumen")      renderResumen();
+  if (_currentView === "registros")    renderRegistros();
+  if (_currentView === "hoteles")      renderHoteles();
+  if (_currentView === "actividad")    renderActividad();
+  if (_currentView === "indicadores")  initIndicadores();
+  if (_currentView === "campanas")     renderCampanas();
+}
+
+// ── Sidebar ───────────────────────────────────────────────────
+
+function hoverOpenSidebar()  { clearTimeout(_sidebarHoverTimer); document.getElementById("sidebar").classList.add("is-hover"); }
+function hoverCloseSidebar() { _sidebarHoverTimer = setTimeout(function() { document.getElementById("sidebar").classList.remove("is-hover"); }, 120); }
+function toggleSidebar()     { document.getElementById("sidebar").classList.toggle("is-open"); document.getElementById("sidebarOverlay").classList.toggle("is-open"); }
+function closeSidebar()      { document.getElementById("sidebar").classList.remove("is-open"); document.getElementById("sidebarOverlay").classList.remove("is-open"); }
+
+function setStatus(s) {
+  var dot  = document.getElementById("statusDot");
+  var text = document.getElementById("statusText");
+  if (s === "ok")      { dot.className = "status-dot dot-ok";     text.textContent = "OK"; }
+  if (s === "loading") { dot.className = "status-dot dot-loading"; text.textContent = "Actualizando\u2026"; }
+  if (s === "error")   { dot.className = "status-dot dot-error";   text.textContent = "Error"; }
+}
+
+function setSidebarUpdated() {
+  var el = document.getElementById("sidebarUpdated");
+  if (el && _data && _data.resumen) el.textContent = _data.resumen.ultima_actualizacion;
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+
+function showToast(msg, type) {
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast toast-" + (type || "info");
+  t.style.display = "block";
+  clearTimeout(t._tid);
+  t._tid = setTimeout(function() { t.style.display = "none"; }, 3000);
+}
+
+// ── Eventos globales ──────────────────────────────────────────
+
+setTimeout(function() {
+  window.addEventListener("resize", function() {
+    if (_data && _currentView === "resumen")   renderResumen();
+    if (_data && _currentView === "actividad") renderActividad();
+    if (_currentView === "indicadores")        _resizeIndCharts_();
+  }, { passive: true });
+}, 0);
+
+setTimeout(function() {
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
+      closeDrawer();
+      closeConfirm();
+      _closeEditModalNow_();
+      _closeCerrarMesNow_();
+      toggleHotelFilter(true);
+      document.getElementById("estadoDropdownPanel").style.display = "none";
+      document.getElementById("estadoFilterChevron").className = "bi bi-chevron-down";
+      document.getElementById("dateDropdownPanel").style.display = "none";
+      document.getElementById("dateFilterChevron").className = "bi bi-chevron-down";
+      closeExportDropdown();
+    }
+  });
+}, 0);
+</script>
