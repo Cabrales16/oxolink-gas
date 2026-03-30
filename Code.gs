@@ -1,5 +1,5 @@
 /**
- * Oxo Partners - Panel de Administración  (v5 - escritura directa BD+Sheets+claspv1)
+ * Oxo Partners - Panel de Administración  (v5 - escritura directa BD + Sheets+claspv1)
  *
  * Script Properties requeridas:
  *   SPREADSHEET_ID   - ID del Google Sheets con los datos
