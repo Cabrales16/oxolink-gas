@@ -1,319 +1,450 @@
 <style>
   /* ═══════════════════════════════════════════════════════════
-   Oxo Partners · Admin · Charts & Indicators Styles  v6
+   Oxo Partners · Admin · Charts & Graphics Styles  v7
    ═══════════════════════════════════════════════════════════ */
 
-  /* ── Chart container ── */
-  .ind-chart-container {
+  /* ── Panel base (contenedores de gráficas) ── */
+  .panel {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 16px;
-    height: 400px;
     box-shadow: var(--shadow-sm);
-  }
-
-  /* ── Loading indicator ── */
-  .ind-loading-sm {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 80px;
-    color: var(--textMuted);
-    font-size: .9rem;
-  }
-
-  .ind-loading-spinner {
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border: 2px solid rgba(138, 110, 61, .2);
-    border-top-color: var(--gold);
-    border-radius: 50%;
-    animation: spin .6s linear infinite;
-    margin-right: 8px;
-  }
-
-  /* ── Filter bar ── */
-  .ind-filter-bar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    box-shadow: var(--shadow-sm);
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .ind-filter-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  /* ── Hotel search/select ── */
-  .ind-hotel-search-wrap {
-    position: relative;
-    min-width: 220px;
-    max-width: 280px;
-    flex: 0 0 auto;
-  }
-
-  .ind-hotel-search-icon {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--textMuted);
-    font-size: .85rem;
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .ind-hotel-search-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--bg);
-    border: 1px solid var(--borderMid);
-    border-radius: var(--radius-sm);
-    padding: 7px 10px 7px 30px;
-    font-family: inherit;
-    font-size: .85rem;
-    color: var(--text);
-    cursor: pointer;
-    width: 100%;
-    text-align: left;
-    transition: border-color .15s, box-shadow .15s;
-    white-space: nowrap;
     overflow: hidden;
   }
 
-  .ind-hotel-search-btn span {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .ind-hotel-search-btn.is-open,
-  .ind-hotel-search-btn:focus {
-    outline: none;
-    border-color: var(--gold);
-    box-shadow: 0 0 0 3px rgba(138,110,61,.10);
-  }
-
-  .ind-hotel-search-caret {
-    color: var(--textMuted);
-    font-size: .72rem;
-    flex-shrink: 0;
-    transition: transform .15s;
-  }
-
-  .ind-hotel-search-btn.is-open .ind-hotel-search-caret {
-    transform: rotate(180deg);
-  }
-
-  .ind-hotel-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    min-width: 100%;
-    max-width: 340px;
-    background: var(--surface);
-    border: 1px solid var(--borderMid);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-md);
-    z-index: 60;
-    display: none;
-    overflow: hidden;
-  }
-
-  .ind-hotel-dropdown.is-open {
-    display: block;
-  }
-
-  .ind-hotel-search-input {
-    width: 100%;
-    border: none;
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
     border-bottom: 1px solid var(--border);
-    padding: 9px 12px;
-    font-family: inherit;
-    font-size: .85rem;
-    color: var(--text);
     background: var(--surface2);
-    outline: none;
-  }
-
-  .ind-hotel-options {
-    max-height: 200px;
-    overflow-y: auto;
-  }
-
-  .ind-hotel-option {
-    padding: 8px 12px;
-    font-size: .85rem;
-    color: var(--textMid);
-    cursor: pointer;
-    transition: background .1s;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .ind-hotel-option:hover {
-    background: var(--goldFaint);
-    color: var(--goldDark);
-  }
-
-  .ind-hotel-option.is-active {
-    background: var(--goldFaint);
-    color: var(--goldDark);
-    font-weight: 600;
-  }
-
-  /* ── Year chips ── */
-  .ind-year-chips {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    gap: 12px;
     flex-wrap: wrap;
-    margin-left: auto;
   }
 
-  .ind-year-chip {
-    background: var(--bg);
-    border: 1px solid var(--borderMid);
-    border-radius: 20px;
-    padding: 4px 14px;
-    font-family: inherit;
-    font-size: .80rem;
-    font-weight: 600;
+  .panel-title {
+    font-size: .85rem;
+    font-weight: 700;
     color: var(--textMid);
-    cursor: pointer;
-    transition: background .14s, border-color .14s, color .14s;
-    user-select: none;
-  }
-
-  .ind-year-chip:hover:not(.is-active) {
-    background: var(--goldFaint);
-    border-color: var(--goldBorder);
-    color: var(--goldDark);
-  }
-
-  .ind-year-chip.is-active {
-    background: var(--gold);
-    border-color: var(--gold);
-    color: #fff;
-  }
-
-  /* ── Month pills ── */
-  .ind-month-strip {
     display: flex;
     align-items: center;
-    gap: 4px;
-    overflow-x: auto;
-    padding: 2px 0 2px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    gap: 7px;
+    margin: 0;
   }
 
-  .ind-month-strip::-webkit-scrollbar {
-    display: none;
-  }
-
-  .ind-month-pill {
+  .panel-title i {
+    font-size: 1rem;
+    color: var(--textMuted);
     flex-shrink: 0;
-    background: var(--bg);
-    border: 1px solid var(--borderMid);
-    border-radius: var(--radius-sm);
-    padding: 5px 11px;
-    font-family: inherit;
-    font-size: .76rem;
-    font-weight: 700;
-    color: var(--textMuted);
-    cursor: pointer;
-    transition: background .14s, border-color .14s, color .14s;
-    user-select: none;
-    letter-spacing: .04em;
   }
 
-  .ind-month-pill:hover:not(.is-active) {
-    background: var(--goldFaint);
-    border-color: var(--goldBorder);
-    color: var(--goldDark);
+  /* ── Chart containers ── */
+  .chart-wrap {
+    padding: 16px 14px 10px;
   }
 
-  .ind-month-pill.is-active {
-    background: var(--gold);
-    border-color: var(--gold);
-    color: #fff;
+  /* ── Bar list (usado en Resumen, Actividad, etc.) ── */
+  .bar-list {
+    padding: 14px 16px;
   }
 
-  /* ── KPI delta badges ── */
-  .kpi-delta {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    font-size: .70rem;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 10px;
-    margin-top: 5px;
-    white-space: nowrap;
-  }
-
-  .kpi-delta i {
-    font-size: .80rem;
-  }
-
-  .kpi-delta-up {
-    background: #f0fdf4;
-    color: #16a34a;
-  }
-
-  .kpi-delta-down {
-    background: #fff1f0;
-    color: #cf1322;
-  }
-
-  .kpi-delta-flat {
-    background: var(--bg);
-    color: var(--textMuted);
-  }
-
-  /* ── Bar list (Resumen / Actividad) ── */
-  .bar-row {
+  .bar-row,
+  .bl-row {
     display: grid;
-    grid-template-columns: 22px 1fr 40px;
+    grid-template-columns: 26px 1fr 44px;
     align-items: center;
-    gap: 8px;
-    padding: 7px 14px;
+    gap: 10px;
+    padding: 8px 0;
     border-bottom: 1px solid var(--border);
   }
 
-  .bar-row:last-child {
+  .bar-row:last-child,
+  .bl-row:last-child {
     border-bottom: none;
   }
 
-  .bar-rank {
-    font-size: .72rem;
-    font-weight: 800;
+  .bar-rank,
+  .bl-label {
+    font-size: .78rem;
+    font-weight: 700;
     color: var(--textMuted);
     text-align: center;
+  }
+
+  .bl-label {
+    text-align: left;
+    font-weight: 500;
+    color: var(--textMid);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .bar-info {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 5px;
     min-width: 0;
   }
 
   .bar-label {
+    font-size: .84rem;
+    font-weight: 600;
+    color: var(--textMid);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bar-track,
+  .bl-track {
+    height: 6px;
+    background: var(--bg);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .bar-fill,
+  .bl-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width .4s cubic-bezier(.4, 0, .2, 1);
+  }
+
+  .bar-val,
+  .bl-val {
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-align: right;
+  }
+
+  /* ── Hotel bars (vista Hoteles) ── */
+  .hotel-bars {
+    padding: 16px 18px;
+  }
+
+  .hotel-bar-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 50px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .hotel-bar-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .hbar-rank {
+    font-size: .8rem;
+    font-weight: 800;
+    color: var(--textMuted);
+    text-align: center;
+  }
+
+  .hbar-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .hbar-name {
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--textMid);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .hbar-track {
+    background: var(--bg);
+    border-radius: 20px;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  .hbar-fill {
+    height: 100%;
+    border-radius: 20px;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--goldLight) 100%);
+    transition: width .5s cubic-bezier(.4, 0, .2, 1);
+  }
+
+  .hbar-count {
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-align: right;
+  }
+
+  /* ── Sync stats grid (Actividad) ── */
+  .sync-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .sync-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 14px;
+    background: var(--surface);
+    gap: 8px;
+  }
+
+  .sync-item i {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .sync-pending i {
+    color: #d48806;
+  }
+
+  .sync-ok i {
+    color: #52c41a;
+  }
+
+  .sync-err i {
+    color: #ff4d4f;
+  }
+
+  .sync-val {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .sync-lbl {
+    font-size: .76rem;
+    font-weight: 600;
+    color: var(--textMuted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    text-align: center;
+  }
+
+  /* ── Indicadores (tabs) ── */
+  .ind-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .ind-tab {
+    border: none;
+    background: transparent;
+    padding: 10px 16px;
+    font-family: inherit;
+    font-size: .86rem;
+    font-weight: 600;
+    color: var(--textMuted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ind-tab i {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .ind-tab:hover {
+    color: var(--text);
+  }
+
+  .ind-tab.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  /* ── Indicadores controls ── */
+  .ind-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .ind-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 140px;
+  }
+
+  .ind-label {
+    font-size: .76rem;
+    font-weight: 700;
+    color: var(--textMuted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .ind-select {
+    background: var(--bg);
+    border: 1px solid var(--borderMid);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: .85rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
+  }
+
+  .ind-select:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(138, 110, 61, .10);
+  }
+
+  .ind-apply-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--goldFaint);
+    border: 1px solid var(--goldBorder);
+    border-radius: var(--radius-sm);
+    padding: 9px 14px;
+    font-family: inherit;
+    font-size: .84rem;
+    font-weight: 600;
+    color: var(--goldDark);
+    cursor: pointer;
+    transition: background .15s;
+    white-space: nowrap;
+    align-self: flex-end;
+  }
+
+  .ind-apply-btn:hover {
+    background: rgba(138, 110, 61, .14);
+  }
+
+  /* ── Hotel multi-select chips ── */
+  .ind-hotel-wrap {
+    position: relative;
+  }
+
+  .ind-hotel-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-width: 520px;
+    max-height: 80px;
+    overflow-y: auto;
+    padding: 2px 0;
+  }
+
+  .ind-hotel-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--bg);
+    border: 1px solid var(--borderMid);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: .79rem;
+    font-weight: 500;
+    color: var(--textMid);
+    cursor: pointer;
+    transition: background .14s, border-color .14s, color .14s;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .ind-hotel-chip.is-selected {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #fff;
+  }
+
+  .ind-hotel-chip:hover:not(.is-selected) {
+    background: var(--goldFaint);
+    border-color: var(--goldBorder);
+    color: var(--goldDark);
+  }
+
+  .ind-loading-sm {
+    font-size: .82rem;
+    color: var(--textMuted);
+    padding: 6px 0;
+  }
+
+  /* ── Contenedor de gráficas Lightweight Charts ── */
+  .ind-chart-container {
+    width: 100%;
+    height: 280px;
+    padding: 14px 16px 10px;
+    position: relative;
+  }
+
+  /* ── Leyenda de series ── */
+  .ind-legend {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .ind-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .77rem;
+    font-weight: 600;
+    color: var(--textMid);
+    white-space: nowrap;
+  }
+
+  .ind-legend-dot {
+    width: 10px;
+    height: 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ── Ranking lateral ── */
+  .ind-ranking-row {
+    display: grid;
+    grid-template-columns: 24px 1fr 56px;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ind-ranking-row:last-child {
+    border-bottom: none;
+  }
+
+  .ind-rank-num {
+    font-size: .74rem;
+    font-weight: 800;
+    color: var(--textMuted);
+    text-align: center;
+  }
+
+  .ind-rank-name {
     font-size: .82rem;
     font-weight: 500;
     color: var(--textMid);
@@ -322,68 +453,34 @@
     text-overflow: ellipsis;
   }
 
-  .bar-track {
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .bar-fill {
-    height: 100%;
-    border-radius: 2px;
-    transition: width .3s ease;
-  }
-
-  .bar-val {
-    font-size: .78rem;
+  .ind-rank-val {
+    font-size: .8rem;
     font-weight: 700;
     color: var(--gold);
     text-align: right;
   }
 
-  /* ── Indicator controls ── */
-  .ind-controls {
+  /* ── Estado vacío (indicadores) ── */
+  .ind-empty {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-  }
-
-  .ind-control-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .ind-tabs {
-    display: flex;
-    gap: 4px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .ind-tab {
-    border: none;
-    background: transparent;
-    padding: 8px 14px;
-    font-family: inherit;
-    font-size: .85rem;
-    font-weight: 600;
+    justify-content: center;
+    gap: 12px;
+    padding: 56px 24px;
     color: var(--textMuted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    transition: all .15s;
+    text-align: center;
   }
 
-  .ind-tab:hover {
-    color: var(--text);
+  .ind-empty i {
+    font-size: 2.6rem;
+    opacity: .35;
   }
 
-  .ind-tab.is-active {
-    color: var(--gold);
-    border-bottom-color: var(--gold);
+  .ind-empty p {
+    font-size: .92rem;
+    line-height: 1.6;
+    margin: 0;
   }
 
   /* ── Cerrar mes button ── */
@@ -391,21 +488,28 @@
     display: flex;
     align-items: center;
     gap: 7px;
-    background: #faad14;
-    border: none;
+    background: linear-gradient(135deg, var(--gold), var(--goldDark));
     color: #fff;
+    border: none;
     border-radius: var(--radius-sm);
-    padding: 8px 16px;
+    padding: 9px 16px;
     font-family: inherit;
-    font-size: .87rem;
+    font-size: .85rem;
     font-weight: 600;
     cursor: pointer;
-    margin-left: auto;
-    transition: opacity .15s;
+    transition: opacity .18s, transform .12s;
+    white-space: nowrap;
   }
 
   .btn-cerrar-mes:hover {
-    opacity: .9;
+    opacity: .88;
+    transform: translateY(-1px);
+  }
+
+  .btn-cerrar-mes:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+    transform: none;
   }
 
   /* ── Cerrar mes modal sections ── */
@@ -433,16 +537,17 @@
 
   .cm-hotel-item input[type="checkbox"] {
     accent-color: var(--gold);
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
     flex-shrink: 0;
+    cursor: pointer;
   }
 
   .cm-hotel-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 5px 4px;
+    padding: 6px 4px;
     border-radius: 4px;
     cursor: pointer;
     font-size: .85rem;
@@ -458,11 +563,11 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    max-height: 160px;
+    max-height: 170px;
     overflow-y: auto;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 6px 8px;
+    padding: 8px;
   }
 
   .cm-range-row {
@@ -479,7 +584,7 @@
   }
 
   .cm-range-label {
-    font-size: .75rem;
+    font-size: .76rem;
     font-weight: 600;
     color: var(--textMuted);
     white-space: nowrap;
@@ -500,9 +605,128 @@
     background: var(--hover);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 8px 12px;
-    font-size: .8rem;
+    padding: 10px 12px;
+    font-size: .81rem;
     color: var(--textMid);
     line-height: 1.6;
+  }
+
+  /* ── Filter bar (hotel panel) ── */
+  .hotel-filter-panel {
+    background: var(--surface);
+    border: 1px solid var(--borderMid);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+
+  .hfp-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .hfp-title {
+    font-size: .84rem;
+    font-weight: 700;
+    color: var(--textMid);
+  }
+
+  .hfp-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .hfp-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    font-family: inherit;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--textMid);
+    cursor: pointer;
+    transition: all .13s;
+  }
+
+  .hfp-btn:hover {
+    background: var(--goldFaint);
+    border-color: var(--goldBorder);
+    color: var(--goldDark);
+  }
+
+  .hfp-btn-apply {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #fff;
+  }
+
+  .hfp-btn-apply:hover {
+    background: var(--goldDark);
+    border-color: var(--goldDark);
+  }
+
+  .hfp-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hfp-search i {
+    color: var(--textMuted);
+    font-size: 1rem;
+  }
+
+  .hfp-search-input {
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-family: inherit;
+    font-size: .87rem;
+    color: var(--text);
+  }
+
+  .hfp-list {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 6px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+  }
+
+  .hfp-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: .84rem;
+    color: var(--textMid);
+    transition: background .12s;
+  }
+
+  .hfp-item:hover {
+    background: var(--goldFaint);
+  }
+
+  .hfp-check {
+    accent-color: var(--gold);
+    cursor: pointer;
+  }
+
+  .hfp-name {
+    line-height: 1.3;
   }
 </style>

@@ -1,0 +1,452 @@
+<style>
+  /* ═══════════════════════════════════════════════════════════
+   Oxo Partners · Admin · Skeleton Loading Styles  v7
+   Sistema de estados de carga (shimmer + pulse)
+   ═══════════════════════════════════════════════════════════ */
+
+  /* ═══════════════════════════════════════════════════════════
+     SKELETON BASE
+     ═══════════════════════════════════════════════════════════ */
+
+  .skeleton {
+    background: var(--skeleton-base);
+    border-radius: var(--radius-sm);
+    position: relative;
+    overflow: hidden;
+    animation: skeletonPulse 2s ease-in-out infinite;
+  }
+
+  .skeleton::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--skeleton-shimmer) 50%,
+      transparent 100%
+    );
+    animation: skeletonShimmer 2s ease-in-out infinite;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     ANIMACIONES
+     ═══════════════════════════════════════════════════════════ */
+
+  @keyframes skeletonShimmer {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+
+  @keyframes skeletonPulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     SKELETON SHAPES (formas comunes)
+     ═══════════════════════════════════════════════════════════ */
+
+  /* Texto */
+  .skeleton-text {
+    height: 14px;
+    width: 100%;
+    margin: 4px 0;
+  }
+
+  .skeleton-text-sm {
+    height: 12px;
+    width: 80%;
+  }
+
+  .skeleton-text-lg {
+    height: 18px;
+    width: 100%;
+  }
+
+  .skeleton-text-xl {
+    height: 24px;
+    width: 90%;
+  }
+
+  /* Títulos */
+  .skeleton-title {
+    height: 28px;
+    width: 60%;
+    margin-bottom: 12px;
+    border-radius: var(--radius-sm);
+  }
+
+  .skeleton-subtitle {
+    height: 16px;
+    width: 40%;
+    margin-bottom: 8px;
+  }
+
+  /* Círculos (avatares, iconos) */
+  .skeleton-circle {
+    border-radius: 50%;
+  }
+
+  .skeleton-circle-sm {
+    width: 32px;
+    height: 32px;
+  }
+
+  .skeleton-circle-md {
+    width: 44px;
+    height: 44px;
+  }
+
+  .skeleton-circle-lg {
+    width: 56px;
+    height: 56px;
+  }
+
+  /* Rectángulos */
+  .skeleton-rect {
+    width: 100%;
+    height: 100px;
+  }
+
+  .skeleton-rect-sm {
+    height: 60px;
+  }
+
+  .skeleton-rect-lg {
+    height: 140px;
+  }
+
+  /* Botones */
+  .skeleton-button {
+    height: 36px;
+    width: 120px;
+    border-radius: var(--radius-sm);
+  }
+
+  .skeleton-button-sm {
+    height: 30px;
+    width: 80px;
+  }
+
+  .skeleton-button-lg {
+    height: 42px;
+    width: 160px;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     SKELETON COMPONENTS (componentes específicos)
+     ═══════════════════════════════════════════════════════════ */
+
+  /* KPI Card Skeleton */
+  .skeleton-kpi {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 16px;
+    min-height: 90px;
+  }
+
+  .skeleton-kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: var(--skeleton-base);
+    flex-shrink: 0;
+  }
+
+  .skeleton-kpi-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .skeleton-kpi-value {
+    height: 24px;
+    width: 70%;
+    background: var(--skeleton-base);
+    border-radius: var(--radius-sm);
+  }
+
+  .skeleton-kpi-label {
+    height: 12px;
+    width: 50%;
+    background: var(--skeleton-base);
+    border-radius: var(--radius-sm);
+  }
+
+  /* Table Row Skeleton */
+  .skeleton-table-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr 120px 80px 100px 40px;
+    gap: 12px;
+    align-items: center;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .skeleton-table-cell {
+    height: 16px;
+    background: var(--skeleton-base);
+    border-radius: var(--radius-sm);
+  }
+
+  .skeleton-table-cell-sm {
+    height: 12px;
+    width: 60%;
+  }
+
+  /* Panel Skeleton */
+  .skeleton-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .skeleton-panel-head {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .skeleton-panel-title {
+    height: 16px;
+    width: 140px;
+    background: var(--skeleton-base);
+    border-radius: var(--radius-sm);
+  }
+
+  .skeleton-panel-body {
+    padding: 16px;
+  }
+
+  /* Chart Skeleton */
+  .skeleton-chart {
+    width: 100%;
+    height: 260px;
+    background: var(--skeleton-base);
+    border-radius: var(--radius-sm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skeleton-chart::after {
+    content: "";
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    height: 60%;
+    background: linear-gradient(
+      to top,
+      transparent 0%,
+      var(--skeleton-shimmer) 20%,
+      transparent 40%,
+      var(--skeleton-shimmer) 60%,
+      transparent 80%
+    );
+    opacity: 0.3;
+  }
+
+  /* Hotel Bar Skeleton */
+  .skeleton-hotel-bar {
+    display: grid;
+    grid-template-columns: 28px 1fr 50px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .skeleton-hotel-bar-rank {
+    width: 20px;
+    height: 14px;
+    background: var(--skeleton-base);
+    border-radius: var(--radius-sm);
+  }
+
+  .skeleton-hotel-bar-track {
+    height: 8px;
+    background: var(--skeleton-base);
+    border-radius: 20px;
+  }
+
+  .skeleton-hotel-bar-count {
+    width: 40px;
+    height: 14px;
+    background: var(--skeleton-base);
+    border-radius: var(--radius-sm);
+    margin-left: auto;
+  }
+
+  /* Badge Skeleton */
+  .skeleton-badge {
+    display: inline-block;
+    height: 20px;
+    width: 60px;
+    background: var(--skeleton-base);
+    border-radius: 20px;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     SKELETON LAYOUTS (composiciones)
+     ═══════════════════════════════════════════════════════════ */
+
+  /* View Header Skeleton */
+  .skeleton-view-header {
+    margin-bottom: 20px;
+  }
+
+  .skeleton-view-header .skeleton-title {
+    margin-bottom: 6px;
+  }
+
+  .skeleton-view-header .skeleton-subtitle {
+    width: 30%;
+  }
+
+  /* KPI Grid Skeleton */
+  .skeleton-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--kpi-gap);
+    margin-bottom: var(--section-gap);
+  }
+
+  /* Table Skeleton */
+  .skeleton-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .skeleton-table-header {
+    background: var(--surface2);
+    padding: 11px 14px;
+    border-bottom: 2px solid var(--goldBorder);
+  }
+
+  .skeleton-table-header-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 1fr 120px 80px 100px 40px;
+    gap: 12px;
+  }
+
+  .skeleton-table-header-cell {
+    height: 12px;
+    background: var(--skeleton-base);
+    border-radius: var(--radius-sm);
+    width: 70%;
+  }
+
+  .skeleton-table-body {
+    /* Contendrá .skeleton-table-row */
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     SKELETON HELPERS
+     ═══════════════════════════════════════════════════════════ */
+
+  /* Deshabilitar animaciones en skeleton cuando está cargado */
+  .skeleton.loaded {
+    animation: none;
+  }
+
+  .skeleton.loaded::before {
+    animation: none;
+    display: none;
+  }
+
+  /* Variante de skeleton más sutil (solo pulse, sin shimmer) */
+  .skeleton-pulse {
+    animation: skeletonPulse 2s ease-in-out infinite;
+  }
+
+  .skeleton-pulse::before {
+    display: none;
+  }
+
+  /* Variante de skeleton más rápida */
+  .skeleton-fast {
+    animation-duration: 1s;
+  }
+
+  .skeleton-fast::before {
+    animation-duration: 1s;
+  }
+
+  /* Ocultar skeleton cuando el contenido está visible */
+  .is-loading .content {
+    display: none;
+  }
+
+  .is-loading .skeleton {
+    display: block;
+  }
+
+  .is-loaded .skeleton {
+    display: none;
+  }
+
+  .is-loaded .content {
+    display: block;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     RESPONSIVE SKELETON
+     ═══════════════════════════════════════════════════════════ */
+
+  @media (max-width: 1023px) {
+    .skeleton-kpi-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .skeleton-table-row,
+    .skeleton-table-header-row {
+      grid-template-columns: 40px 1fr 1fr 80px 40px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .skeleton-kpi-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .skeleton-kpi {
+      min-height: 80px;
+      padding: 14px 12px;
+    }
+
+    .skeleton-kpi-icon {
+      width: 36px;
+      height: 36px;
+    }
+
+    .skeleton-table-row,
+    .skeleton-table-header-row {
+      grid-template-columns: 1fr 80px 40px;
+    }
+
+    .skeleton-hotel-bar {
+      grid-template-columns: 24px 1fr 40px;
+      gap: 8px;
+    }
+  }
+</style>

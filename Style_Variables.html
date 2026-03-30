@@ -1,17 +1,23 @@
 <style>
   /* ═══════════════════════════════════════════════════════════
-   Oxo Partners · Admin · Style Variables  v6
+   Oxo Partners · Admin · Style Variables  v7
+   Sistema de tokens CSS unificado
    ═══════════════════════════════════════════════════════════ */
 
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=DM+Mono:wght@400;500&display=swap');
 
   :root {
-    /* Color palette */
+    /* ═══════════════════════════════════════════════════════════
+       PALETA DE COLORES
+       ═══════════════════════════════════════════════════════════ */
+    
+    /* Gold (color principal) */
     --gold: #8A6E3D;
     --goldDark: #6d5630;
     --goldLight: #b8975a;
     --goldFaint: rgba(138, 110, 61, .08);
     --goldBorder: rgba(138, 110, 61, .20);
+    --goldHover: rgba(138, 110, 61, .12);
 
     /* Backgrounds */
     --bg: #f5f4f1;
@@ -23,36 +29,176 @@
     --text: #1a1714;
     --textMid: #4a4540;
     --textMuted: #8a857e;
+    --textLight: #b5b1ac;
 
     /* Borders & dividers */
     --border: rgba(0, 0, 0, .08);
     --borderMid: rgba(0, 0, 0, .12);
+    --borderStrong: rgba(0, 0, 0, .16);
 
-    /* Layout dimensions */
+    /* ═══════════════════════════════════════════════════════════
+       COLORES SEMÁNTICOS (estados)
+       ═══════════════════════════════════════════════════════════ */
+    
+    /* Success (verde) */
+    --success: #52c41a;
+    --successDark: #389e0d;
+    --successLight: #73d13d;
+    --successBg: rgba(82, 196, 26, .12);
+    --successBorder: rgba(82, 196, 26, .25);
+
+    /* Error (rojo) */
+    --error: #ff4d4f;
+    --errorDark: #cf1322;
+    --errorLight: #ff7875;
+    --errorBg: rgba(255, 77, 79, .10);
+    --errorBorder: rgba(255, 77, 79, .30);
+
+    /* Warning (naranja/amarillo) */
+    --warning: #faad14;
+    --warningDark: #d48806;
+    --warningLight: #ffc53d;
+    --warningBg: rgba(255, 166, 5, .12);
+    --warningBorder: rgba(255, 166, 5, .30);
+
+    /* Info (azul) */
+    --info: #1677ff;
+    --infoDark: #0958d9;
+    --infoLight: #69b1ff;
+    --infoBg: rgba(22, 119, 255, .10);
+    --infoBorder: rgba(22, 119, 255, .28);
+
+    /* ═══════════════════════════════════════════════════════════
+       LAYOUT & DIMENSIONES
+       ═══════════════════════════════════════════════════════════ */
+    
+    /* Sidebar */
     --sidebar-collapsed: 52px;
     --sidebar-expanded: 240px;
     --sidebar-w: var(--sidebar-collapsed);
     --topbar-h: 56px;
 
-    /* Shadows */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, .07);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, .09);
-    --shadow-lg: 0 16px 40px rgba(0, 0, 0, .12);
+    /* Spacing system (escala 4px) */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
 
-    /* Border radius */
-    --radius: 10px;
-    --radius-sm: 6px;
-
-    /* Scrollbar colors */
-    --sb-track: rgba(138, 110, 61, .06);
-    --sb-thumb: rgba(138, 110, 61, .28);
-    --sb-thumb-hover: rgba(138, 110, 61, .52);
-
-    /* Spacing */
+    /* View padding */
     --view-pad-x: 20px;
     --view-pad-y: 20px;
     --kpi-gap: 14px;
     --section-gap: 14px;
     --panel-side: 280px;
+
+    /* ═══════════════════════════════════════════════════════════
+       SOMBRAS
+       ═══════════════════════════════════════════════════════════ */
+    
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, .05);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, .07);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, .09);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, .12);
+    --shadow-xl: 0 24px 56px rgba(0, 0, 0, .15);
+
+    /* ═══════════════════════════════════════════════════════════
+       BORDER RADIUS
+       ═══════════════════════════════════════════════════════════ */
+    
+    --radius-xs: 4px;
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-md: 12px;
+    --radius-lg: 14px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+
+    /* ═══════════════════════════════════════════════════════════
+       SCROLLBAR
+       ═══════════════════════════════════════════════════════════ */
+    
+    --sb-track: rgba(138, 110, 61, .06);
+    --sb-thumb: rgba(138, 110, 61, .28);
+    --sb-thumb-hover: rgba(138, 110, 61, .52);
+    --sb-width: 6px;
+
+    /* ═══════════════════════════════════════════════════════════
+       TIPOGRAFÍA
+       ═══════════════════════════════════════════════════════════ */
+    
+    --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'DM Mono', 'Courier New', monospace;
+
+    /* Font sizes */
+    --text-xs: .7rem;
+    --text-sm: .8rem;
+    --text-base: .9rem;
+    --text-lg: 1rem;
+    --text-xl: 1.2rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.8rem;
+
+    /* Font weights */
+    --weight-normal: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+    --weight-extrabold: 800;
+
+    /* ═══════════════════════════════════════════════════════════
+       TRANSICIONES & ANIMACIONES
+       ═══════════════════════════════════════════════════════════ */
+    
+    --transition-fast: .15s ease;
+    --transition-base: .2s ease;
+    --transition-slow: .3s ease;
+    --transition-slower: .5s ease;
+
+    --ease-in-out: cubic-bezier(.4, 0, .2, 1);
+    --ease-out: cubic-bezier(0, 0, .2, 1);
+    --ease-in: cubic-bezier(.4, 0, 1, 1);
+
+    /* ═══════════════════════════════════════════════════════════
+       Z-INDEX LAYERS
+       ═══════════════════════════════════════════════════════════ */
+    
+    --z-dropdown: 50;
+    --z-sticky: 100;
+    --z-sidebar: 200;
+    --z-modal: 600;
+    --z-drawer: 700;
+    --z-toast: 9999;
+
+    /* ═══════════════════════════════════════════════════════════
+       ICONOS (tamaños consistentes)
+       ═══════════════════════════════════════════════════════════ */
+    
+    --icon-xs: .85rem;
+    --icon-sm: 1rem;
+    --icon-base: 1.1rem;
+    --icon-lg: 1.3rem;
+    --icon-xl: 1.6rem;
+    --icon-2xl: 2rem;
+
+    /* ═══════════════════════════════════════════════════════════
+       SKELETON LOADING
+       ═══════════════════════════════════════════════════════════ */
+    
+    --skeleton-base: rgba(138, 110, 61, .08);
+    --skeleton-shimmer: rgba(138, 110, 61, .16);
   }
+
+  /* ═══════════════════════════════════════════════════════════
+     RESPONSIVE BREAKPOINTS (para referencia)
+     ═══════════════════════════════════════════════════════════ */
+  /*
+    Mobile:       < 768px
+    Tablet:       768px - 1023px
+    Desktop:      1024px - 1439px
+    Large:        >= 1440px
+  */
 </style>
