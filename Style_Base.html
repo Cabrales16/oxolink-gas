@@ -1,6 +1,6 @@
 <style>
   /* ═══════════════════════════════════════════════════════════
-   Oxo Partners · Admin · Base Styles  v6
+   Oxo Partners · Admin · Base Styles  v7
    ═══════════════════════════════════════════════════════════ */
 
   *,
@@ -13,18 +13,18 @@
   body {
     height: 100%;
     margin: 0;
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: var(--font-sans);
     font-size: 14px;
     color: var(--text);
     background: var(--bg);
     -webkit-font-smoothing: antialiased;
-    overflow: hidden;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Scrollbar styling */
+  /* ── Scrollbars ── */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: var(--sb-width);
+    height: var(--sb-width);
   }
 
   ::-webkit-scrollbar-track {
@@ -46,50 +46,44 @@
     scrollbar-color: var(--sb-thumb) var(--sb-track);
   }
 
-  /* Animations */
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+  /* ── Views (contenedores principales) ── */
+  .view {
+    padding: var(--view-pad-y) var(--view-pad-x) 40px;
+    min-height: calc(100vh - var(--topbar-h));
   }
 
-  @keyframes waveAnim {
-    0% {
-      transform: translate(-50%, -75%) rotate(0deg);
-    }
-    100% {
-      transform: translate(-50%, -75%) rotate(360deg);
-    }
+  .view-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
   }
 
-  @keyframes slideUp {
-    from {
-      transform: translateY(12px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+  .view-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
-  @keyframes slideDown {
-    from {
-      transform: translateY(-12px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+  .view-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  .view-sub {
+    margin: 4px 0 0;
+    font-size: .88rem;
+    color: var(--textMuted);
   }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: .5; }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 </style>

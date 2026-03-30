@@ -729,4 +729,32 @@
   .hfp-name {
     line-height: 1.3;
   }
+
+  /* ── Grid helpers para paneles ── */
+  .section-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--section-gap);
+    margin-bottom: var(--section-gap);
+  }
+  
+  .panel-wide {
+    grid-column: span 1;
+  }
+  
+  .panel-narrow {
+    grid-column: span 1;
+  }
+  
+  /* Responsive */
+  @media (max-width: 1023px) {
+    .section-row {
+      grid-template-columns: 1fr;
+    }
+    
+    .panel-wide,
+    .panel-narrow {
+      grid-column: span 1;
+    }
+  }
 </style>
