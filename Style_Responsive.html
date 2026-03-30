@@ -1,0 +1,396 @@
+<style>
+  /* ═══════════════════════════════════════════════════════════
+   Oxo Partners · Admin · Responsive Styles  v6
+   ═══════════════════════════════════════════════════════════ */
+
+  /* ── Large screens (1440px+) ── */
+  @media (min-width: 1440px) {
+    :root {
+      --view-pad-x: 36px;
+      --view-pad-y: 28px;
+      --kpi-gap: 20px;
+      --section-gap: 20px;
+      --panel-side: 320px;
+    }
+
+    .kpi-card {
+      padding: 22px 20px;
+    }
+
+    .kpi-value {
+      font-size: 2rem;
+    }
+
+    .data-table {
+      font-size: .9rem;
+    }
+
+    .data-table thead th,
+    .data-table td {
+      padding: 11px 14px;
+    }
+
+    .table-wrap {
+      max-height: calc(100vh - var(--topbar-h) - var(--view-pad-y) - 240px);
+    }
+
+    .view-title {
+      font-size: 1.6rem;
+    }
+  }
+
+  /* ── Medium-Large screens (1024px - 1439px) ── */
+  @media (min-width: 1024px) and (max-width: 1439px) {
+    :root {
+      --view-pad-x: 24px;
+      --view-pad-y: 22px;
+      --kpi-gap: 16px;
+      --section-gap: 16px;
+      --panel-side: 260px;
+    }
+
+    .table-wrap {
+      max-height: calc(100vh - var(--topbar-h) - var(--view-pad-y) - 230px);
+    }
+  }
+
+  /* ── Tablet (768px - 1023px) ── */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    :root {
+      --view-pad-x: 18px;
+      --view-pad-y: 18px;
+      --kpi-gap: 12px;
+      --section-gap: 12px;
+    }
+
+    .kpi-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .kpi-grid-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .kpi-grid-4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .section-row {
+      grid-template-columns: 1fr;
+    }
+
+    .section-row.col-2 {
+      grid-template-columns: 1fr;
+    }
+
+    .table-wrap {
+      max-height: calc(100vh - var(--topbar-h) - var(--view-pad-y) - 260px);
+    }
+
+    .col-hide-md {
+      display: none;
+    }
+
+    .ind-filter-row {
+      gap: 8px;
+    }
+
+    @media (max-width: 900px) {
+      .ind-hotel-search-wrap {
+        max-width: 100%;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .ind-year-chips {
+        margin-left: 0;
+      }
+
+      .kpi-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .ind-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .ind-control-group {
+        min-width: unset;
+        width: 100%;
+      }
+
+      .ind-hotel-list {
+        max-width: 100%;
+      }
+
+      .ind-tabs {
+        overflow-x: auto;
+      }
+
+      .ind-tab span {
+        display: none;
+      }
+    }
+  }
+
+  /* ── Mobile (max 767px) ── */
+  @media (max-width: 767px) {
+    html,
+    body {
+      overflow: auto;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      height: 100vh;
+      transform: translateX(-100%);
+      width: var(--sidebar-expanded);
+      z-index: 200;
+      transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .sidebar.is-open {
+      transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+      display: block;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 150;
+    }
+
+    .topbar-menu {
+      display: flex;
+    }
+
+    .main-content {
+      margin-left: 0;
+      height: auto;
+      overflow-y: visible;
+      padding-top: var(--topbar-h);
+    }
+
+    :root {
+      --view-pad-x: 14px;
+      --view-pad-y: 14px;
+      --kpi-gap: 10px;
+      --section-gap: 12px;
+    }
+
+    .kpi-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .kpi-grid-3 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .kpi-grid-4 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .kpi-card {
+      padding: 14px 12px;
+    }
+
+    .kpi-label {
+      font-size: .72rem;
+    }
+
+    .kpi-value {
+      font-size: 1.4rem;
+    }
+
+    .section-row {
+      grid-template-columns: 1fr;
+    }
+
+    .section-row.col-2 {
+      grid-template-columns: 1fr;
+    }
+
+    .col-hide-sm {
+      display: none;
+    }
+
+    .col-hide-md {
+      display: none;
+    }
+
+    .edit-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .edit-field-full {
+      grid-column: 1;
+    }
+
+    .data-table {
+      font-size: .8rem;
+    }
+
+    .data-table thead th,
+    .data-table td {
+      padding: 8px 10px;
+    }
+
+    .table-wrap {
+      max-height: calc(100vh - var(--topbar-h) - var(--view-pad-y) - 200px);
+    }
+
+    .modal-card {
+      max-width: calc(100vw - 24px);
+      max-height: calc(100vh - 40px);
+    }
+
+    .drawer-panel {
+      max-width: 100%;
+    }
+
+    .view-title {
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+    }
+
+    .login-card {
+      padding: 28px 20px;
+    }
+
+    .login-wrap {
+      max-width: 100%;
+    }
+
+    /* Chart responsive */
+    .ind-chart-container {
+      height: 280px;
+    }
+
+    @media (max-width: 600px) {
+      .ind-filter-bar {
+        padding: 10px 12px;
+        gap: 10px;
+      }
+
+      .ind-month-pill {
+        padding: 4px 8px;
+        font-size: .72rem;
+      }
+
+      .kpi-grid {
+        gap: 8px;
+      }
+
+      .kpi-grid-4 {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .ind-chart-container {
+        height: 200px;
+      }
+
+      .btn-cerrar-mes span {
+        display: none;
+      }
+
+      .ind-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .ind-control-group {
+        min-width: unset;
+        width: 100%;
+      }
+
+      .ind-hotel-search-wrap {
+        min-width: unset;
+        max-width: 100%;
+        flex: 1;
+      }
+
+      .login-brand {
+        gap: 10px;
+      }
+
+      .login-logo {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+      }
+
+      .login-brand-name {
+        font-size: .95rem;
+      }
+    }
+  }
+
+  /* ── Landscape mobile ── */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .sidebar {
+      height: 100vh;
+    }
+
+    .topbar {
+      height: 48px;
+    }
+
+    .view-wrapper {
+      height: calc(100vh - 48px);
+    }
+
+    .kpi-card {
+      padding: 12px 10px;
+    }
+
+    .kpi-value {
+      font-size: 1.3rem;
+    }
+  }
+
+  /* ── Print styles ── */
+  @media print {
+    #adminShell {
+      display: none;
+    }
+
+    #loginScreen {
+      display: none;
+    }
+
+    .sidebar,
+    .topbar,
+    .modal,
+    .modal-overlay,
+    .drawer,
+    .toast,
+    .loading-overlay {
+      display: none !important;
+    }
+
+    body {
+      background: #fff;
+      color: #000;
+    }
+
+    .main-content {
+      all: unset;
+      display: block;
+    }
+
+    .view-wrapper {
+      all: unset;
+      display: block;
+    }
+  }
+</style>
