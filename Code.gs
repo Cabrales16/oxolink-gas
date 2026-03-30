@@ -1,5 +1,5 @@
 /**
- * Oxo Partners - Panel de Administración  (v5 - escritura directa BD+Sheets+clasp)
+ * Oxo Partners - Panel de Administración  (v5 - escritura directa BD+Sheets+claspv1)
  *
  * Script Properties requeridas:
  *   SPREADSHEET_ID   - ID del Google Sheets con los datos
@@ -17,26 +17,6 @@
  */
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-
-function getProjectFiles() {
-  try {
-    const scriptId = ScriptApp.getScriptId();
-    const project = Apps.Script.Projects.getContent(scriptId);
-    
-    const files = {};
-    if (project.files) {
-      project.files.forEach(file => {
-        files[file.name] = {
-          type: file.type, // SERVER_JS, HTML, JSON
-          source: file.source
-        };
-      });
-    }
-    return files;
-  } catch(e) {
-    throw new Error("Error: " + e.message);
-  }
-}
 
 function getConfig_() {
   const sp = PropertiesService.getScriptProperties();
