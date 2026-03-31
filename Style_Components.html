@@ -869,4 +869,177 @@
     padding: 3px 10px;
     margin: 2px 4px 2px 0;
   }
+
+  /* ── Alias paginación campañas (page-btn = pag-btn) ── */
+  .page-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--textMid);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .13s;
+  }
+
+  .page-btn:hover:not(.active) {
+    background: var(--goldFaint);
+    border-color: var(--goldBorder);
+    color: var(--goldDark);
+  }
+
+  .page-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #fff;
+  }
+
+  .page-ellipsis {
+    font-size: .82rem;
+    color: var(--textMuted);
+    padding: 0 4px;
+  }
+
+  /* ── Export dropdown ── */
+  .export-dropdown-wrap {
+    position: relative;
+  }
+
+  .export-dropdown-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-dropdown);
+    min-width: 210px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .export-section-label {
+    font-size: .68rem;
+    font-weight: 700;
+    color: var(--textMuted);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    padding: 6px 10px 4px;
+  }
+
+  .export-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+
+  .export-opt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    font-family: inherit;
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--textMid);
+    cursor: pointer;
+    text-align: left;
+    transition: background .12s, color .12s;
+  }
+
+  .export-opt i {
+    font-size: 1rem;
+    flex-shrink: 0;
+    color: var(--textMuted);
+  }
+
+  .export-opt:hover {
+    background: var(--goldFaint);
+    color: var(--goldDark);
+  }
+
+  .export-opt:hover i {
+    color: var(--goldDark);
+  }
+
+  /* ── Active filter pills ── */
+  .active-filters-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .af-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--goldFaint);
+    border: 1px solid var(--goldBorder);
+    color: var(--goldDark);
+    border-radius: var(--radius-full);
+    padding: 4px 8px 4px 10px;
+    font-size: .78rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .af-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: var(--goldDark);
+    cursor: pointer;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: .8rem;
+    padding: 0;
+    opacity: .7;
+    transition: opacity .12s;
+  }
+
+  .af-remove:hover {
+    opacity: 1;
+  }
+
+  .af-clear-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius-full);
+    padding: 4px 10px;
+    font-family: inherit;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--textMuted);
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+    white-space: nowrap;
+  }
+
+  .af-clear-all:hover {
+    background: var(--errorBg);
+    border-color: var(--errorBorder);
+    color: var(--errorDark);
+  }
 </style>
