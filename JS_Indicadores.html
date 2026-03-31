@@ -34,6 +34,9 @@ function loadIndicadores() {
   var btn = document.querySelector(".btn-cerrar-mes");
   if (btn) btn.disabled = true;
 
+  // Mostrar skeleton en paneles de indicadores mientras cargan
+  _showIndSkeleton_(true);
+
   var hotelesOk = false, historicoOk = false;
   var hotelData = null, histData = null;
 
@@ -41,6 +44,7 @@ function loadIndicadores() {
     if (!hotelesOk || !historicoOk) return;
     _indHoteles   = hotelData;
     _indHistorico = histData;
+    _showIndSkeleton_(false);
     _poblarMenMonthStrip_();
     _poblarSelectoresHoteles_();
     _poblarSelectoresAnio_();
@@ -52,13 +56,43 @@ function loadIndicadores() {
 
   google.script.run
     .withSuccessHandler(function(h) { hotelData = h || []; hotelesOk = true; _tryInit_(); })
-    .withFailureHandler(function(e) { showToast("Error cargando hoteles: " + _errMsg_(e), "error"); if (btn) btn.disabled = false; })
+    .withFailureHandler(function(e) { _showIndSkeleton_(false); showToast("Error cargando hoteles: " + _errMsg_(e), "error"); if (btn) btn.disabled = false; })
     .getHotelesList();
 
   google.script.run
     .withSuccessHandler(function(d) { histData = d; historicoOk = true; _tryInit_(); })
-    .withFailureHandler(function(e) { showToast("Error cargando histórico: " + _errMsg_(e), "error"); if (btn) btn.disabled = false; })
+    .withFailureHandler(function(e) { _showIndSkeleton_(false); showToast("Error cargando histórico: " + _errMsg_(e), "error"); if (btn) btn.disabled = false; })
     .getHistoricoData([]);
+}
+
+// ── Skeleton de indicadores ────────────────────────────────────
+
+function _showIndSkeleton_(show) {
+  var skl = document.getElementById("indSkeletonLoader");
+  if (!skl) {
+    // Crear el skeleton la primera vez
+    skl = document.createElement("div");
+    skl.id = "indSkeletonLoader";
+    skl.innerHTML =
+      '<div class="kpi-grid kpi-grid-4" style="margin-bottom:16px">' +
+        '<div class="skeleton-kpi"><div class="skeleton skeleton-kpi-icon"></div><div class="skeleton-kpi-content"><div class="skeleton skeleton-kpi-value"></div><div class="skeleton skeleton-kpi-label"></div></div></div>'.repeat(4) +
+      '</div>' +
+      '<div class="skeleton-panel" style="margin-bottom:14px"><div class="skeleton-panel-head"><div class="skeleton skeleton-panel-title"></div></div><div class="skeleton-panel-body"><div class="skeleton skeleton-chart"></div></div></div>' +
+      '<div class="skeleton-panel" style="margin-bottom:14px"><div class="skeleton-panel-head"><div class="skeleton skeleton-panel-title"></div></div><div class="skeleton-panel-body"><div class="skeleton skeleton-chart"></div></div></div>';
+    // Insertarlo antes del primer tab-panel visible
+    var indView = document.getElementById("view-indicadores");
+    if (indView) {
+      var firstPanel = indView.querySelector(".ind-tab-panel");
+      if (firstPanel) indView.insertBefore(skl, firstPanel);
+      else indView.appendChild(skl);
+    }
+  }
+  skl.style.display = show ? "block" : "none";
+
+  // Ocultar/mostrar los paneles reales mientras carga
+  document.querySelectorAll(".ind-tab-panel, #indEmpty").forEach(function(el) {
+    el.style.visibility = show ? "hidden" : "visible";
+  });
 }
 
 // ── Tabs ──────────────────────────────────────────────────────

@@ -1,0 +1,527 @@
+<style>
+  /* ═══════════════════════════════════════════════════════════
+   Oxo Partners · Admin · Indicadores & Filters Styles  v1
+   Cubre: hotel-search-dropdown, year-chips, month-strip,
+          filter-dropdowns, date-controls, camp-selector
+   ═══════════════════════════════════════════════════════════ */
+
+  /* ── Filter bar (contenedor en vista Indicadores) ── */
+  .ind-filter-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .ind-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* ── Hotel search-select dropdown ── */
+  .ind-hotel-search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 200px;
+  }
+
+  .ind-hotel-search-icon {
+    color: var(--textMuted);
+    font-size: 1rem;
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+
+  .ind-hotel-search-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    border: 1px solid var(--borderMid);
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    font-family: inherit;
+    font-size: .84rem;
+    font-weight: 500;
+    color: var(--textMid);
+    cursor: pointer;
+    transition: border-color .13s, background .13s, color .13s;
+    white-space: nowrap;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .ind-hotel-search-btn span {
+    flex: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ind-hotel-search-btn:hover,
+  .ind-hotel-search-btn.is-open {
+    border-color: var(--goldBorder);
+    background: var(--goldFaint);
+    color: var(--goldDark);
+  }
+
+  .ind-hotel-search-caret {
+    font-size: .78rem;
+    color: var(--textMuted);
+    flex-shrink: 0;
+    transition: transform .15s;
+  }
+
+  .ind-hotel-search-btn.is-open .ind-hotel-search-caret {
+    transform: rotate(180deg);
+  }
+
+  /* Panel flotante del dropdown */
+  .ind-hotel-dropdown {
+    display: none;
+    flex-direction: column;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 220px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-dropdown);
+    overflow: hidden;
+  }
+
+  .ind-hotel-dropdown.is-open {
+    display: flex;
+  }
+
+  .ind-hotel-search-input {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: .84rem;
+    color: var(--text);
+    outline: none;
+    box-sizing: border-box;
+  }
+
+  .ind-hotel-search-input::placeholder {
+    color: var(--textMuted);
+  }
+
+  .ind-hotel-options {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 4px;
+  }
+
+  .ind-hotel-option {
+    padding: 8px 12px;
+    font-size: .84rem;
+    color: var(--textMid);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background .12s, color .12s;
+  }
+
+  .ind-hotel-option:hover {
+    background: var(--goldFaint);
+    color: var(--goldDark);
+  }
+
+  .ind-hotel-option.is-active {
+    background: var(--gold);
+    color: #fff;
+  }
+
+  /* ── Year chips ── */
+  .ind-year-chips {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .ind-year-chip {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--borderMid);
+    background: var(--bg);
+    border-radius: var(--radius-full);
+    padding: 5px 13px;
+    font-family: inherit;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--textMid);
+    cursor: pointer;
+    transition: background .13s, border-color .13s, color .13s;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .ind-year-chip:hover:not(.is-active) {
+    background: var(--goldFaint);
+    border-color: var(--goldBorder);
+    color: var(--goldDark);
+  }
+
+  .ind-year-chip.is-active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #fff;
+  }
+
+  /* ── Month strip (grid 12 columnas) ── */
+  .ind-month-strip {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 4px;
+  }
+
+  .ind-month-pill,
+  .ind-month-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 5px 4px;
+    font-family: inherit;
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--textMuted);
+    cursor: pointer;
+    transition: background .12s, border-color .12s, color .12s;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .ind-month-pill:hover:not(.is-active),
+  .ind-month-btn:hover:not(.is-active) {
+    background: var(--goldFaint);
+    border-color: var(--goldBorder);
+    color: var(--goldDark);
+  }
+
+  .ind-month-pill.is-active,
+  .ind-month-btn.is-active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #fff;
+  }
+
+  /* ── Filter dropdown genérico (Registros — estado / fecha) ── */
+  .filter-dropdown-wrap {
+    position: relative;
+  }
+
+  .filter-dropdown-panel {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: var(--z-dropdown);
+    min-width: 180px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  /* Variante para el filtro de fecha (más ancho) */
+  .filter-date-panel {
+    min-width: 264px;
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .fdd-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    font-size: .85rem;
+    color: var(--textMid);
+    cursor: pointer;
+    transition: background .12s;
+    user-select: none;
+  }
+
+  .fdd-item:hover {
+    background: var(--goldFaint);
+  }
+
+  .fdd-item input[type="radio"] {
+    accent-color: var(--gold);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* ── Date presets (grid 2 col) ── */
+  .date-presets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+
+  .date-preset-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: .79rem;
+    font-weight: 500;
+    color: var(--textMid);
+    cursor: pointer;
+    transition: background .12s, border-color .12s, color .12s;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .date-preset-btn:hover {
+    background: var(--goldFaint);
+    border-color: var(--goldBorder);
+    color: var(--goldDark);
+  }
+
+  /* ── Date range inputs ── */
+  .date-range-inputs {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .date-field-label {
+    font-size: .74rem;
+    font-weight: 600;
+    color: var(--textMuted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .date-input {
+    border: 1px solid var(--borderMid);
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    font-family: inherit;
+    font-size: .83rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color .13s, box-shadow .13s;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .date-input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(138, 110, 61, .10);
+  }
+
+  .date-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+
+  .date-apply-btn {
+    border: 1px solid var(--gold);
+    background: var(--gold);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .13s;
+  }
+
+  .date-apply-btn:hover {
+    opacity: .88;
+  }
+
+  .date-clear-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--textMid);
+    border-radius: var(--radius-sm);
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: .82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .12s, border-color .12s;
+  }
+
+  .date-clear-btn:hover {
+    background: var(--goldFaint);
+    border-color: var(--goldBorder);
+  }
+
+  /* ── Campaign selector ── */
+  .camp-selector {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .camp-selector-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+
+  .camp-selector-title {
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--textMid);
+  }
+
+  .camp-count {
+    font-size: .79rem;
+    font-weight: 600;
+    color: var(--textMuted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 2px 9px;
+  }
+
+  .camp-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 6px;
+  }
+
+  .camp-user-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background .12s;
+  }
+
+  .camp-user-item:hover {
+    background: var(--goldFaint);
+  }
+
+  .camp-user-check {
+    accent-color: var(--gold);
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .camp-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .camp-user-name {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--textMid);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .camp-user-email {
+    font-size: .76rem;
+    color: var(--textMuted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Recipient items (JS_Correos — renderRecipientsList) ── */
+  .recipient-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .12s;
+  }
+
+  .recipient-item:last-child {
+    border-bottom: none;
+  }
+
+  .recipient-item:hover {
+    background: var(--goldFaint);
+  }
+
+  .recipient-checkbox {
+    accent-color: var(--gold);
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .recipient-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .recipient-name {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--textMid);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .recipient-email {
+    font-size: .76rem;
+    color: var(--textMuted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

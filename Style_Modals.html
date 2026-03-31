@@ -14,13 +14,14 @@
     padding: 20px;
     background: rgba(0, 0, 0, .45);
     backdrop-filter: blur(4px);
+    animation: fadeIn .22s ease;
   }
 
   .modal.is-hidden {
     display: none;
   }
 
-  /* ── Modal overlay (deprecated, kept for compatibility) ── */
+  /* ── Modal overlay (kept for compatibility) ── */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -31,6 +32,7 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
+    animation: fadeIn .22s ease;
   }
 
   .modal-overlay.is-open {
@@ -49,7 +51,7 @@
     flex-direction: column;
     max-height: 90vh;
     overflow: hidden;
-    animation: slideDown .25s ease;
+    animation: slideDown .28s cubic-bezier(.4, 0, .2, 1);
   }
 
   .modal-card-sm {
@@ -202,12 +204,8 @@
   /* ── Drawer (side panel) ── */
   .drawer {
     position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     z-index: 700;
-    display: flex;
-    align-items: flex-end;
     pointer-events: none;
   }
 
@@ -216,14 +214,13 @@
   }
 
   .drawer-backdrop {
-    position: fixed;
+    position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, .45);
     backdrop-filter: blur(4px);
     opacity: 0;
-    transition: opacity .25s;
+    transition: opacity .28s ease;
     pointer-events: none;
-    z-index: 699;
   }
 
   .drawer.is-open .drawer-backdrop {
@@ -232,17 +229,20 @@
   }
 
   .drawer-panel {
-    position: relative;
-    width: 100%;
-    max-width: 420px;
-    height: 100vh;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 420px;
+    max-width: 92vw;
     background: var(--surface);
     border-left: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     transform: translateX(100%);
-    transition: transform .3s cubic-bezier(.4, 0, .2, 1);
-    box-shadow: -4px 0 16px rgba(0, 0, 0, .08);
+    transition: transform .32s cubic-bezier(.4, 0, .2, 1);
+    box-shadow: -8px 0 32px rgba(0, 0, 0, .12);
+    z-index: 1;
   }
 
   .drawer.is-open .drawer-panel {

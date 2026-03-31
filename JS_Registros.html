@@ -330,6 +330,7 @@ function goPage(p) {
 
 function renderRegistros() {
   if (!_data) return;
+  _hideSkel_("skel-registros");
   var all = getFilteredRegistros(), total = all.length;
   var start = (_regPage-1) * _pageSize;
   var list  = all.slice(start, start + _pageSize);

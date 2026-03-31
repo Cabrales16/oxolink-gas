@@ -3,8 +3,14 @@
 //  Oxo Partners · Admin · Vistas (Resumen, Hoteles, Actividad)
 // ══════════════════════════════════════════════════════════════
 
+function _hideSkel_(id) {
+  var el = document.getElementById(id);
+  if (el) el.classList.add("is-hidden");
+}
+
 function renderResumen() {
   if (!_data) return;
+  _hideSkel_("skel-resumen");
   var r = _data.resumen;
   setText("kpiTotal", r.total); setText("kpiActivos", r.activos); setText("kpiBajas", r.bajas); setText("kpiUpdated", r.ultima_actualizacion);
   renderChart("chart7dias", r.dias7, "#8A6E3D");
@@ -13,6 +19,7 @@ function renderResumen() {
 
 function renderHoteles() {
   if (!_data) return;
+  _hideSkel_("skel-hoteles");
   var hoteles = _data.hoteles || [], r = _data.resumen;
   setText("kpiPropUniq", r.propUniq || hoteles.length); setText("kpiVinculos", r.totalVinculos || 0); setText("kpiTop1", hoteles[0] ? hoteles[0].nombre : "\u2014");
   var max = hoteles[0] ? hoteles[0].count : 1;
@@ -28,6 +35,7 @@ function renderHoteles() {
 
 function renderActividad() {
   if (!_data) return;
+  _hideSkel_("skel-actividad");
   var a = _data.actividad, s = _data.sync_stats || {};
   setText("kpiHoy", a.nuevosHoy); setText("kpiNuevos7", a.nuevos7); setText("kpiNuevos30", a.nuevos30); setText("kpiTendencia", a.tendencia7);
   renderChart("chartActividad", a.dias7, "#8A6E3D");

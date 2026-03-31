@@ -6,77 +6,217 @@
 // ── Estado local ───────────────────────────────────────────────
 
 var _selectedRecipients = [];
-var _allRecipients = [];
-var _editorContent = "";
+var _allRecipients      = [];
+var _editorContent      = "";
+var _campSearch         = "";
+var _campSortKey        = "nombre";
+var _campSortAsc        = true;
+var _campPage           = 1;
+var _campPageSize       = 50;
+var _campLoaded         = false;
 
 // ── RENDER CAMPANAS ────────────────────────────────────────────
 
 function renderCampanas() {
-  loadCampaignRecipients();
+  if (!_campLoaded) {
+    loadCampaignRecipients();
+  } else {
+    _renderCampanasList_();
+  }
 }
 
 function loadCampaignRecipients() {
+  // Mostrar skeleton, ocultar lista real
+  var skl  = document.getElementById("campSkeletonList");
+  var list = document.getElementById("recipientsList");
+  var pag  = document.getElementById("campPagination");
+  if (skl)  skl.style.display  = "block";
+  if (list) list.style.display = "none";
+  if (pag)  pag.style.display  = "none";
+
   setStatus("loading");
   google.script.run
     .withSuccessHandler(function(recipients) {
       setStatus("ok");
+      _campLoaded = true;
       _allRecipients = recipients || [];
-      renderRecipientsList(recipients);
+      if (skl)  skl.style.display  = "none";
+      if (list) list.style.display = "block";
+      _campPage = 1;
+      _renderCampanasList_();
     })
     .withFailureHandler(function(err) {
       setStatus("error");
-      alert("Error: " + _errMsg_(err));
+      if (skl)  skl.style.display  = "none";
+      if (list) { list.style.display = "block"; list.innerHTML = '<div class="empty-msg" style="padding:20px">Error al cargar destinatarios</div>'; }
     })
     .getCampaignRecipients();
 }
 
-function renderRecipientsList(recipients) {
-  const list = document.getElementById("recipientsList");
-  if (!recipients || !recipients.length) {
-    list.innerHTML = '<div style="padding:16px;color:#999;text-align:center">No hay destinatarios activos</div>';
-    document.getElementById("selectAllCheckbox").disabled = true;
-    return;
+// ── Búsqueda ──────────────────────────────────────────────────
+
+function onCampSearch() {
+  var el = document.getElementById("campSearch");
+  _campSearch = el ? el.value.toLowerCase().trim() : "";
+  var clr = document.getElementById("campSearchClear");
+  if (clr) clr.style.display = _campSearch ? "flex" : "none";
+  _campPage = 1;
+  _renderCampanasList_();
+}
+
+function clearCampSearch() {
+  var el = document.getElementById("campSearch");
+  if (el) el.value = "";
+  _campSearch = "";
+  var clr = document.getElementById("campSearchClear");
+  if (clr) clr.style.display = "none";
+  _campPage = 1;
+  _renderCampanasList_();
+}
+
+// ── Ordenamiento ──────────────────────────────────────────────
+
+function onCampSort() {
+  var sel = document.getElementById("campSortSelect");
+  if (!sel) return;
+  var val = sel.value;  // ej: "nombre_asc"
+  var parts = val.split("_");
+  _campSortKey = parts[0];
+  _campSortAsc = parts[parts.length - 1] === "asc";
+  _campPage = 1;
+  _renderCampanasList_();
+}
+
+// ── Paginación ────────────────────────────────────────────────
+
+function onCampPageSize() {
+  var sel = document.getElementById("campPageSize");
+  _campPageSize = sel ? parseInt(sel.value, 10) : 50;
+  _campPage = 1;
+  _renderCampanasList_();
+}
+
+function campChangePage(page) {
+  _campPage = page;
+  _renderCampanasList_();
+}
+
+// ── Render principal ──────────────────────────────────────────
+
+function _renderCampanasList_() {
+  var list = document.getElementById("recipientsList");
+  if (!list) return;
+
+  // 1. Filtrar
+  var filtered = _allRecipients.filter(function(r) {
+    if (!_campSearch) return true;
+    var nombre  = (r.nombre  || "").toLowerCase();
+    var correo  = (r.correo  || "").toLowerCase();
+    var hoteles = (r.hoteles || r.hotel || "").toLowerCase();
+    return nombre.indexOf(_campSearch) !== -1 ||
+           correo.indexOf(_campSearch) !== -1 ||
+           hoteles.indexOf(_campSearch) !== -1;
+  });
+
+  // 2. Ordenar
+  filtered.sort(function(a, b) {
+    var va = "", vb = "";
+    if (_campSortKey === "nombre") { va = (a.nombre || ""); vb = (b.nombre || ""); }
+    if (_campSortKey === "correo") { va = (a.correo || ""); vb = (b.correo || ""); }
+    if (_campSortKey === "hotel")  { va = (a.hoteles || a.hotel || ""); vb = (b.hoteles || b.hotel || ""); }
+    var cmp = va.localeCompare(vb, "es", { sensitivity: "base" });
+    return _campSortAsc ? cmp : -cmp;
+  });
+
+  // 3. Paginar
+  var total    = filtered.length;
+  var pages    = Math.max(1, Math.ceil(total / _campPageSize));
+  _campPage    = Math.max(1, Math.min(_campPage, pages));
+  var startIdx = (_campPage - 1) * _campPageSize;
+  var pageItems = filtered.slice(startIdx, startIdx + _campPageSize);
+
+  // 4. Render lista
+  var cbx = document.getElementById("selectAllCheckbox");
+  if (cbx) { cbx.disabled = total === 0; cbx.checked = false; }
+
+  if (!total) {
+    list.innerHTML = '<div class="empty-msg" style="padding:20px;text-align:center">' +
+      (_campSearch ? "Sin resultados para «" + esc(_campSearch) + "»." : "No hay destinatarios activos.") + '</div>';
+  } else {
+    list.innerHTML = pageItems.map(function(r, localIdx) {
+      var globalIdx = startIdx + localIdx;
+      var hotelStr = r.hoteles || r.hotel || "";
+      return '<div class="recipient-item">' +
+        '<input type="checkbox" class="recipient-checkbox"' +
+        ' data-email="'  + esc(r.correo)             + '"' +
+        ' data-nombre="' + esc(r.nombre || "")        + '"' +
+        ' data-cedula="' + esc(r.cedula || "")        + '"' +
+        ' data-idx="'    + globalIdx                  + '"' +
+        ' onchange="updateSelectedRecipients()">' +
+        '<div class="recipient-info">' +
+          '<div class="recipient-name">' + esc(r.nombre || "Sin nombre") + '</div>' +
+          '<div class="recipient-email">' + esc(r.correo) +
+            (hotelStr ? ' <span class="hotel-badge" style="margin-left:6px">' + esc(hotelStr.split(",")[0].trim()) + '</span>' : "") +
+          '</div>' +
+        '</div>' +
+        '</div>';
+    }).join("");
   }
 
-  document.getElementById("selectAllCheckbox").disabled = false;
-  document.getElementById("selectAllCheckbox").checked = false;
-
-  list.innerHTML = recipients.map((r, idx) => `
-    <div class="recipient-item">
-      <input type="checkbox" class="recipient-checkbox" 
-             data-email="${esc(r.correo)}" 
-             data-nombre="${esc(r.nombre || '')}"
-             data-cedula="${esc(r.cedula || '')}"
-             data-idx="${idx}" 
-             onchange="updateSelectedRecipients()">
-      <div class="recipient-info">
-        <div class="recipient-name">${esc(r.nombre || "Sin nombre")}</div>
-        <div class="recipient-email">${esc(r.correo)}</div>
-      </div>
-    </div>
-  `).join("");
+  // 5. Footer de paginación
+  var pag     = document.getElementById("campPagination");
+  var info    = document.getElementById("campPageInfo");
+  var pageNav = document.getElementById("campPageNav");
+  if (pag) pag.style.display = total > 0 ? "flex" : "none";
+  if (info) {
+    var from = total === 0 ? 0 : startIdx + 1;
+    var to   = Math.min(startIdx + _campPageSize, total);
+    info.textContent = from + "–" + to + " de " + total + " destinatarios";
+  }
+  if (pageNav) {
+    var btns = "";
+    if (pages <= 7) {
+      for (var i = 1; i <= pages; i++) {
+        btns += '<button class="page-btn' + (i === _campPage ? " active" : "") + '" onclick="campChangePage(' + i + ')">' + i + '</button>';
+      }
+    } else {
+      btns += '<button class="page-btn' + (_campPage === 1 ? " active" : "") + '" onclick="campChangePage(1)">1</button>';
+      if (_campPage > 3) btns += '<span class="page-ellipsis">…</span>';
+      for (var j = Math.max(2, _campPage - 1); j <= Math.min(pages - 1, _campPage + 1); j++) {
+        btns += '<button class="page-btn' + (j === _campPage ? " active" : "") + '" onclick="campChangePage(' + j + ')">' + j + '</button>';
+      }
+      if (_campPage < pages - 2) btns += '<span class="page-ellipsis">…</span>';
+      btns += '<button class="page-btn' + (_campPage === pages ? " active" : "") + '" onclick="campChangePage(' + pages + ')">' + pages + '</button>';
+    }
+    pageNav.innerHTML = btns;
+  }
 
   updateSelectedRecipients();
 }
 
+function renderRecipientsList(recipients) {
+  // Delegamos a _renderCampanasList_ que es la versión completa
+  _allRecipients = recipients || [];
+  _renderCampanasList_();
+}
+
 function toggleSelectAll() {
-  const allChecked = document.getElementById("selectAllCheckbox").checked;
-  document.querySelectorAll(".recipient-checkbox").forEach(cb => {
+  var allChecked = document.getElementById("selectAllCheckbox").checked;
+  document.querySelectorAll(".recipient-checkbox").forEach(function(cb) {
     cb.checked = allChecked;
   });
   updateSelectedRecipients();
 }
 
 function updateSelectedRecipients() {
-  const checkboxes = document.querySelectorAll(".recipient-checkbox:checked");
-  const count = checkboxes.length;
-  document.getElementById("selectedCount").textContent = count > 0 ? `(${count} seleccionados)` : "";
-  
-  _selectedRecipients = Array.from(checkboxes).map(cb => ({
-    correo: cb.dataset.email,
-    nombre: cb.dataset.nombre,
-    cedula: cb.dataset.cedula
-  }));
+  var checkboxes = document.querySelectorAll(".recipient-checkbox:checked");
+  var count = checkboxes.length;
+  var countEl = document.getElementById("selectedCount");
+  if (countEl) countEl.textContent = count > 0 ? count + " seleccionados" : "";
+
+  _selectedRecipients = Array.from(checkboxes).map(function(cb) {
+    return { correo: cb.dataset.email, nombre: cb.dataset.nombre, cedula: cb.dataset.cedula };
+  });
 }
 
 // ── EMAIL COMPOSER ────────────────────────────────────────────
@@ -248,12 +388,10 @@ function sendCampaign() {
     return;
   }
 
-  const confirmMsg = `¿Enviar a ${_selectedRecipients.length} destinatario(s)?\n\nAsunto: ${asunto}`;
-  if (!confirm(confirmMsg)) {
-    return;
-  }
+  var confirmMsg = "¿Enviar a " + _selectedRecipients.length + " destinatario(s)?\n\nAsunto: " + asunto;
+  if (!confirm(confirmMsg)) return;
 
-  const btn = document.getElementById("sendEmailBtn");
+  var btn = document.getElementById("sendEmailBtn");
   btn.disabled = true;
   btn.innerHTML = '<span>Enviando…</span><div class="btn-spin" style="margin-left:8px;display:inline-block"></div>';
 
@@ -261,19 +399,17 @@ function sendCampaign() {
     .withSuccessHandler(function(result) {
       btn.disabled = false;
       btn.innerHTML = '<i class="bi bi-send"></i> Enviar a seleccionados';
-
       if (result.errors && result.errors.length > 0) {
-        alert(`✓ Campaña enviada (parcialmente)\n\nEnviados: ${result.sentCount}/${result.totalRequested}\nErrores: ${result.errors.length}`);
+        showToast("Campaña enviada parcialmente (" + result.sentCount + "/" + result.totalRequested + ")", "warning");
       } else {
-        alert(`✓ Campaña enviada exitosamente\n\nEnviados: ${result.sentCount}/${result.totalRequested}`);
+        showToast("Campaña enviada: " + result.sentCount + " correos", "success");
       }
-      
       closeEmailComposer();
     })
     .withFailureHandler(function(err) {
       btn.disabled = false;
       btn.innerHTML = '<i class="bi bi-send"></i> Enviar a seleccionados';
-      alert("Error: " + _errMsg_(err));
+      showToast("Error: " + _errMsg_(err), "error");
     })
     .sendCampaignEmails({
       asunto: asunto,

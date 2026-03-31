@@ -57,6 +57,30 @@
     border-bottom: 1px solid rgba(255, 255, 255, .07);
   }
 
+  /* ── Collapsed: centrar iconos de nav alineados con el logo ── */
+  .sidebar:not(.is-hover):not(.is-open) .nav-item {
+    padding-left: 0;
+    padding-right: 0;
+    justify-content: center;
+    border-left-color: transparent;
+  }
+
+  .sidebar:not(.is-hover):not(.is-open) .nav-item.active {
+    border-left-color: var(--gold);
+  }
+
+  .sidebar:not(.is-hover):not(.is-open) .sidebar-refresh-btn {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .sidebar:not(.is-hover):not(.is-open) .sidebar-logout {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   .sidebar-brand-icon {
     width: 32px;
     height: 32px;
@@ -96,14 +120,16 @@
     gap: 2px;
     margin-left: 10px;
     opacity: 0;
-    transition: opacity .15s;
+    max-width: 0;
     overflow: hidden;
+    transition: opacity .18s ease, max-width .22s ease;
     white-space: nowrap;
   }
 
   .sidebar.is-hover .sidebar-brand-text,
   .sidebar.is-open .sidebar-brand-text {
     opacity: 1;
+    max-width: 200px;
   }
 
   .sidebar-brand-name {
@@ -162,22 +188,27 @@
     margin-bottom: 2px;
     border-left: 3px solid transparent;
     white-space: nowrap;
-    overflow: hidden;
   }
 
   .nav-item i {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     flex-shrink: 0;
+    min-width: 1.3rem;
+    text-align: center;
   }
 
   .nav-item span {
     opacity: 0;
-    transition: opacity .12s;
+    max-width: 0;
+    overflow: hidden;
+    transition: opacity .15s ease, max-width .22s ease;
+    display: inline-block;
   }
 
   .sidebar.is-hover .nav-item span,
   .sidebar.is-open .nav-item span {
     opacity: 1;
+    max-width: 200px;
   }
 
   .nav-item:hover {
@@ -372,21 +403,20 @@
     justify-content: flex-end;
   }
 
-  /* Topbar user (avatar + nombre) */
+  /* Topbar user (avatar + nombre) — sin recuadro */
   .topbar-user {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 10px;
+    padding: 4px 8px;
     border-radius: var(--radius);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    transition: background .15s;
+    background: transparent;
+    border: none;
+    transition: opacity .15s;
   }
 
   .topbar-user:hover {
-    background: var(--goldFaint);
-    border-color: var(--goldBorder);
+    opacity: .8;
   }
 
   .topbar-avatar {

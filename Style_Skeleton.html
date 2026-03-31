@@ -449,4 +449,21 @@
       gap: 8px;
     }
   }
+
+  /* ═══════════════════════════════════════════════════════════
+     VIEW SKELETON — placeholder por vista
+     ═══════════════════════════════════════════════════════════ */
+
+  .view-skeleton {
+    animation: fadeIn .2s ease;
+  }
+
+  .view-skeleton.is-hidden {
+    display: none !important;
+  }
+
+  /* Los elementos reales de cada vista se ocultan mientras carga */
+  .view-content-hidden {
+    display: none !important;
+  }
 </style>

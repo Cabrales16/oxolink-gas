@@ -217,4 +217,67 @@
     background: var(--goldFaint);
     color: var(--text);
   }
+
+  /* ═══════════════════════════════════════════════════════════
+     KEYFRAMES GLOBALES
+     ═══════════════════════════════════════════════════════════ */
+
+  /* Rotación (spinner, refresh) */
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Pulsación suave (dot-loading, badge) */
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .4; }
+  }
+
+  /* Aparición + deslizamiento hacia abajo (modales, dropdowns) */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-14px) scale(.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Cierre del modal (clase añadida por JS) */
+  @keyframes slideUp {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-12px) scale(.97);
+    }
+  }
+
+  /* Toast slide-in desde abajo */
+  @keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Fade simple */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* Drawer deslizamiento desde la derecha */
+  @keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+
+  /* Animación olas del login */
+  @keyframes waveAnim {
+    0%   { transform: translate(-50%, -75%) rotate(0deg); }
+    100% { transform: translate(-50%, -75%) rotate(360deg); }
+  }
 </style>

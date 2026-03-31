@@ -18,6 +18,7 @@
   <?!= include_("Style_Components") ?>
   <?!= include_("Style_Skeleton") ?>
   <?!= include_("Style_Charts") ?>
+  <?!= include_("Style_Indicadores") ?>
   <?!= include_("Style_Utilities") ?>
   <?!= include_("Style_Responsive") ?>
   <style id="emailComposerStyles"></style>
@@ -182,10 +183,66 @@
         </div>
       </div>
 
-      <div id="globalLoader" class="global-loader" style="display:none">
-        <div class="loader-card">
-          <div class="loader-spin"></div>
-          <div class="loader-text">Cargando datos…</div>
+      <!-- SKELETON LOADER (reemplaza "Cargando datos…") -->
+      <div id="globalLoader" style="display:none;padding:var(--view-pad-y) var(--view-pad-x)">
+        <!-- Header skeleton -->
+        <div style="margin-bottom:20px">
+          <div class="skeleton skeleton-title" style="width:180px;margin-bottom:8px"></div>
+          <div class="skeleton skeleton-text-sm" style="width:260px"></div>
+        </div>
+        <!-- KPI grid skeleton -->
+        <div class="kpi-grid" style="margin-bottom:16px">
+          <div class="skeleton-kpi">
+            <div class="skeleton skeleton-kpi-icon"></div>
+            <div class="skeleton-kpi-content">
+              <div class="skeleton skeleton-kpi-value"></div>
+              <div class="skeleton skeleton-kpi-label"></div>
+            </div>
+          </div>
+          <div class="skeleton-kpi">
+            <div class="skeleton skeleton-kpi-icon"></div>
+            <div class="skeleton-kpi-content">
+              <div class="skeleton skeleton-kpi-value"></div>
+              <div class="skeleton skeleton-kpi-label"></div>
+            </div>
+          </div>
+          <div class="skeleton-kpi">
+            <div class="skeleton skeleton-kpi-icon"></div>
+            <div class="skeleton-kpi-content">
+              <div class="skeleton skeleton-kpi-value"></div>
+              <div class="skeleton skeleton-kpi-label"></div>
+            </div>
+          </div>
+          <div class="skeleton-kpi">
+            <div class="skeleton skeleton-kpi-icon"></div>
+            <div class="skeleton-kpi-content">
+              <div class="skeleton skeleton-kpi-value"></div>
+              <div class="skeleton skeleton-kpi-label"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Content panels skeleton -->
+        <div class="section-row" style="grid-template-columns:3fr 1fr">
+          <div class="skeleton-panel">
+            <div class="skeleton-panel-head">
+              <div class="skeleton skeleton-panel-title"></div>
+            </div>
+            <div class="skeleton-panel-body">
+              <div class="skeleton skeleton-chart"></div>
+            </div>
+          </div>
+          <div class="skeleton-panel">
+            <div class="skeleton-panel-head">
+              <div class="skeleton skeleton-panel-title"></div>
+            </div>
+            <div class="skeleton-panel-body">
+              <div class="skeleton-hotel-bar"><div class="skeleton skeleton-hotel-bar-rank"></div><div class="skeleton skeleton-hotel-bar-track"></div><div class="skeleton skeleton-hotel-bar-count"></div></div>
+              <div class="skeleton-hotel-bar"><div class="skeleton skeleton-hotel-bar-rank"></div><div class="skeleton skeleton-hotel-bar-track"></div><div class="skeleton skeleton-hotel-bar-count"></div></div>
+              <div class="skeleton-hotel-bar"><div class="skeleton skeleton-hotel-bar-rank"></div><div class="skeleton skeleton-hotel-bar-track"></div><div class="skeleton skeleton-hotel-bar-count"></div></div>
+              <div class="skeleton-hotel-bar"><div class="skeleton skeleton-hotel-bar-rank"></div><div class="skeleton skeleton-hotel-bar-track"></div><div class="skeleton skeleton-hotel-bar-count"></div></div>
+              <div class="skeleton-hotel-bar"><div class="skeleton skeleton-hotel-bar-rank"></div><div class="skeleton skeleton-hotel-bar-track"></div><div class="skeleton skeleton-hotel-bar-count"></div></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -197,6 +254,21 @@
             <p class="view-sub">Visión general de registros</p>
           </div>
         </div>
+
+        <!-- Skeleton Resumen -->
+        <div id="skel-resumen" class="view-skeleton">
+          <div class="skeleton-kpi-grid">
+            <div class="skeleton-kpi"><div class="skeleton skeleton-kpi-icon"></div><div class="skeleton-kpi-content"><div class="skeleton skeleton-kpi-value"></div><div class="skeleton skeleton-kpi-label"></div></div></div>
+            <div class="skeleton-kpi"><div class="skeleton skeleton-kpi-icon"></div><div class="skeleton-kpi-content"><div class="skeleton skeleton-kpi-value"></div><div class="skeleton skeleton-kpi-label"></div></div></div>
+            <div class="skeleton-kpi"><div class="skeleton skeleton-kpi-icon"></div><div class="skeleton-kpi-content"><div class="skeleton skeleton-kpi-value"></div><div class="skeleton skeleton-kpi-label"></div></div></div>
+            <div class="skeleton-kpi"><div class="skeleton skeleton-kpi-icon"></div><div class="skeleton-kpi-content"><div class="skeleton skeleton-kpi-value"></div><div class="skeleton skeleton-kpi-label"></div></div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:3fr 1fr;gap:16px;margin-top:16px">
+            <div class="skeleton-panel"><div class="skeleton-panel-head"><div class="skeleton skeleton-panel-title"></div></div><div class="skeleton-panel-body"></div></div>
+            <div class="skeleton-panel"><div class="skeleton-panel-head"><div class="skeleton skeleton-panel-title"></div></div><div class="skeleton-panel-body" style="height:120px"></div></div>
+          </div>
+        </div>
+
         <div class="kpi-grid">
           <div class="kpi-card kpi-total">
             <div class="kpi-icon"><i class="bi bi-people-fill"></i></div>
@@ -346,6 +418,22 @@
           </div>
         </div>
 
+        <!-- Skeleton Registros -->
+        <div id="skel-registros" class="view-skeleton">
+          <div class="skeleton-table">
+            <div class="skeleton-table-header"><div class="skeleton-table-header-row"><div class="skeleton skeleton-table-header-cell" style="width:60px"></div><div class="skeleton skeleton-table-header-cell" style="width:140px"></div><div class="skeleton skeleton-table-header-cell" style="width:180px"></div><div class="skeleton skeleton-table-header-cell" style="width:100px"></div><div class="skeleton skeleton-table-header-cell" style="width:120px"></div><div class="skeleton skeleton-table-header-cell" style="width:80px"></div></div></div>
+            <div class="skeleton-table-body">
+              <div class="skeleton-table-row"><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div></div>
+              <div class="skeleton-table-row"><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div></div>
+              <div class="skeleton-table-row"><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div></div>
+              <div class="skeleton-table-row"><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div></div>
+              <div class="skeleton-table-row"><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div></div>
+              <div class="skeleton-table-row"><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div></div>
+              <div class="skeleton-table-row"><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div><div class="skeleton skeleton-table-cell"></div><div class="skeleton skeleton-table-cell-sm"></div></div>
+            </div>
+          </div>
+        </div>
+
         <div class="table-wrap" id="tableWrap">
           <table class="data-table" id="tablaRegistros">
             <thead>
@@ -387,6 +475,20 @@
             <p class="view-sub">Concentración por propiedad</p>
           </div>
         </div>
+
+        <!-- Skeleton Hoteles -->
+        <div id="skel-hoteles" class="view-skeleton">
+          <div class="skeleton-kpi-grid" style="grid-template-columns:repeat(3,1fr)">
+            <div class="skeleton-kpi"><div class="skeleton skeleton-kpi-icon"></div><div class="skeleton-kpi-content"><div class="skeleton skeleton-kpi-value"></div><div class="skeleton skeleton-kpi-label"></div></div></div>
+            <div class="skeleton-kpi"><div class="skeleton skeleton-kpi-icon"></div><div class="skeleton-kpi-content"><div class="skeleton skeleton-kpi-value"></div><div class="skeleton skeleton-kpi-label"></div></div></div>
+            <div class="skeleton-kpi"><div class="skeleton skeleton-kpi-icon"></div><div class="skeleton-kpi-content"><div class="skeleton skeleton-kpi-value"></div><div class="skeleton skeleton-kpi-label"></div></div></div>
+          </div>
+          <div class="skeleton-panel" style="margin-top:16px">
+            <div class="skeleton-panel-head"><div class="skeleton skeleton-panel-title"></div></div>
+            <div class="skeleton-panel-body" style="height:200px"></div>
+          </div>
+        </div>
+
         <div class="kpi-grid kpi-grid-3">
           <div class="kpi-card kpi-total">
             <div class="kpi-icon"><i class="bi bi-buildings-fill"></i></div>
@@ -426,6 +528,21 @@
             <p class="view-sub">Señales y tendencias</p>
           </div>
         </div>
+
+        <!-- Skeleton Actividad -->
+        <div id="skel-actividad" class="view-skeleton">
+          <div class="skeleton-kpi-grid">
+            <div class="skeleton-kpi"><div class="skeleton skeleton-kpi-icon"></div><div class="skeleton-kpi-content"><div class="skeleton skeleton-kpi-value"></div><div class="skeleton skeleton-kpi-label"></div></div></div>
+            <div class="skeleton-kpi"><div class="skeleton skeleton-kpi-icon"></div><div class="skeleton-kpi-content"><div class="skeleton skeleton-kpi-value"></div><div class="skeleton skeleton-kpi-label"></div></div></div>
+            <div class="skeleton-kpi"><div class="skeleton skeleton-kpi-icon"></div><div class="skeleton-kpi-content"><div class="skeleton skeleton-kpi-value"></div><div class="skeleton skeleton-kpi-label"></div></div></div>
+            <div class="skeleton-kpi"><div class="skeleton skeleton-kpi-icon"></div><div class="skeleton-kpi-content"><div class="skeleton skeleton-kpi-value"></div><div class="skeleton skeleton-kpi-label"></div></div></div>
+          </div>
+          <div class="skeleton-panel" style="margin-top:16px">
+            <div class="skeleton-panel-head"><div class="skeleton skeleton-panel-title"></div></div>
+            <div class="skeleton-panel-body"></div>
+          </div>
+        </div>
+
         <div class="kpi-grid">
           <div class="kpi-card kpi-total">
             <div class="kpi-icon"><i class="bi bi-calendar-check"></i></div>
@@ -772,36 +889,68 @@
             <h1 class="view-title">Campañas</h1>
             <p class="view-sub">Envío de correos masivos y personalizados</p>
           </div>
+          <div class="header-actions">
+            <button class="action-btn" onclick="openEmailComposer()">
+              <i class="bi bi-pencil-square"></i> Redactar y enviar
+            </button>
+          </div>
         </div>
 
         <div class="panel">
-          <div class="panel-head">
+          <div class="panel-head" style="flex-wrap:wrap;gap:10px">
             <span class="panel-title"><i class="bi bi-people-check"></i> Seleccionar destinatarios</span>
+            <span id="selectedCount" style="font-size:.82rem;color:var(--gold);font-weight:700;margin-left:auto"></span>
           </div>
-          <div class="panel-body" style="padding:16px">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.95rem">
-                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
-                <span>Seleccionar todos (activos)</span>
-              </label>
-              <span id="selectedCount" style="color:#666;font-size:.9rem"></span>
+          <!-- Barra de búsqueda + filtros -->
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+            <div class="search-wrap" style="flex:1;min-width:200px">
+              <i class="bi bi-search"></i>
+              <input type="text" id="campSearch" class="search-input" placeholder="Buscar nombre, correo, hotel…" oninput="onCampSearch()">
+              <button class="search-clear" id="campSearchClear" onclick="clearCampSearch()" style="display:none"><i class="bi bi-x"></i></button>
             </div>
-            <div id="recipientsList" style="max-height:400px;overflow-y:auto;border:1px solid #ddd;border-radius:6px"></div>
+            <!-- Filtro de orden -->
+            <select id="campSortSelect" class="page-size-select" onchange="onCampSort()" style="height:36px;padding:0 10px;font-size:.87rem;min-width:160px">
+              <option value="nombre_asc">Nombre A→Z</option>
+              <option value="nombre_desc">Nombre Z→A</option>
+              <option value="correo_asc">Correo A→Z</option>
+              <option value="hotel_asc">Hotel A→Z</option>
+            </select>
+            <!-- Seleccionar todos -->
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.87rem;font-weight:600;color:var(--textMid);white-space:nowrap">
+              <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" style="width:15px;height:15px">
+              Seleccionar todos
+            </label>
           </div>
-        </div>
 
-        <div class="panel" style="margin-top:16px">
-          <div class="panel-body" style="padding:16px;text-align:center">
-            <button class="action-btn" onclick="openEmailComposer()" style="min-width:200px;padding:12px 24px;font-size:1rem">
-              <i class="bi bi-pencil-square"></i> Redactar y enviar
-            </button>
+          <!-- Skeleton loading de destinatarios -->
+          <div id="campSkeletonList" style="padding:8px 0">
+            <div style="padding:10px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)"><div class="skeleton" style="width:16px;height:16px;border-radius:3px;flex-shrink:0"></div><div style="flex:1"><div class="skeleton" style="height:13px;width:55%;margin-bottom:5px"></div><div class="skeleton" style="height:11px;width:38%"></div></div><div class="skeleton skeleton-badge"></div></div>
+            <div style="padding:10px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)"><div class="skeleton" style="width:16px;height:16px;border-radius:3px;flex-shrink:0"></div><div style="flex:1"><div class="skeleton" style="height:13px;width:62%;margin-bottom:5px"></div><div class="skeleton" style="height:11px;width:44%"></div></div><div class="skeleton skeleton-badge"></div></div>
+            <div style="padding:10px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)"><div class="skeleton" style="width:16px;height:16px;border-radius:3px;flex-shrink:0"></div><div style="flex:1"><div class="skeleton" style="height:13px;width:48%;margin-bottom:5px"></div><div class="skeleton" style="height:11px;width:36%"></div></div><div class="skeleton skeleton-badge"></div></div>
+            <div style="padding:10px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border)"><div class="skeleton" style="width:16px;height:16px;border-radius:3px;flex-shrink:0"></div><div style="flex:1"><div class="skeleton" style="height:13px;width:70%;margin-bottom:5px"></div><div class="skeleton" style="height:11px;width:50%"></div></div><div class="skeleton skeleton-badge"></div></div>
+            <div style="padding:10px 16px;display:flex;align-items:center;gap:12px"><div class="skeleton" style="width:16px;height:16px;border-radius:3px;flex-shrink:0"></div><div style="flex:1"><div class="skeleton" style="height:13px;width:58%;margin-bottom:5px"></div><div class="skeleton" style="height:11px;width:42%"></div></div><div class="skeleton skeleton-badge"></div></div>
+          </div>
+
+          <!-- Lista real de destinatarios -->
+          <div id="recipientsList" style="display:none"></div>
+
+          <!-- Footer con paginación -->
+          <div id="campPagination" style="padding:10px 16px;border-top:1px solid var(--border);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;display:none">
+            <span id="campPageInfo" style="font-size:.82rem;color:var(--textMuted)"></span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <select id="campPageSize" class="page-size-select" onchange="onCampPageSize()" style="height:32px;padding:0 8px;font-size:.82rem">
+                <option value="20">20</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+              </select>
+              <div id="campPageNav" class="page-nav"></div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- EMAIL COMPOSER MODAL -->
-      <div id="emailComposerModal" class="modal" style="display:none">
-        <div class="modal-overlay" onclick="closeEmailComposer()"></div>
+      <div id="emailComposerModal" class="modal" style="display:none" onclick="if(event.target===this)closeEmailComposer()">
         <div class="modal-card" style="max-width:900px;max-height:92vh;display:flex;flex-direction:column">
           <div class="modal-header">
             <h2 class="modal-title">Redactar Campaña</h2>
@@ -887,7 +1036,7 @@
   </div>
 
   <!-- CONFIRM MODAL -->
-  <div id="confirmModal" class="modal-overlay" style="display:none">
+  <div id="confirmModal" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeConfirm()">
     <div class="modal-card modal-card-sm" onclick="event.stopPropagation()">
       <div class="modal-head">
         <div class="modal-title" id="confirmTitle">¿Confirmar acción?</div>
@@ -972,7 +1121,7 @@
 
   <!-- TOAST -->
   <div id="toast" class="toast" style="display:none"></div>
-  <div id="debug-includes" style="display:none">TEST</div>
+    <div id="debug-includes" style="display:none">TEST</div>
   <?!= include_("JS_Registros") ?>
   <?!= include_("JS_Charts") ?>
   <?!= include_("JS_Vistas") ?>

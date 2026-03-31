@@ -681,4 +681,192 @@
     padding: 20px 16px;
     text-align: center;
   }
+
+  /* ═══════════════════════════════════════════════════════════
+     CAMPANAS — lista de destinatarios
+     ═══════════════════════════════════════════════════════════ */
+
+  .recipient-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+    cursor: pointer;
+  }
+
+  .recipient-item:last-child {
+    border-bottom: none;
+  }
+
+  .recipient-item:hover {
+    background: var(--goldFaint);
+  }
+
+  .recipient-item input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: var(--gold);
+  }
+
+  .recipient-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .recipient-name {
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .recipient-email {
+    font-size: .78rem;
+    color: var(--textMuted);
+    font-family: var(--font-mono);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── Editor de campañas ── */
+  .editor-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: var(--radius-xs);
+    padding: 5px 9px;
+    cursor: pointer;
+    font-size: .9rem;
+    color: var(--textMid);
+    transition: background .12s, border-color .12s;
+    font-family: inherit;
+  }
+
+  .editor-btn:hover {
+    background: var(--goldFaint);
+    border-color: var(--goldBorder);
+    color: var(--goldDark);
+  }
+
+  .template-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    font-size: .87rem;
+    font-weight: 600;
+    color: var(--textMid);
+    cursor: pointer;
+    transition: all .15s;
+    font-family: inherit;
+  }
+
+  .template-card:hover {
+    background: var(--goldFaint);
+    border-color: var(--goldBorder);
+    color: var(--goldDark);
+  }
+
+  /* form-input-text (usado en campaña) */
+  .form-input-text {
+    border: 1px solid var(--borderMid);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: .9rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    background: var(--surface);
+  }
+
+  .form-input-text:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(138, 110, 61, .10);
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     DRAWER — detalle de usuario (clases generadas por JS)
+     ═══════════════════════════════════════════════════════════ */
+
+  .detail-section {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .detail-section:last-child {
+    border-bottom: none;
+  }
+
+  .detail-badge-wrap {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .detail-label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--textMuted);
+    margin-bottom: 6px;
+  }
+
+  .detail-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .88rem;
+    color: var(--textMid);
+    margin-bottom: 4px;
+  }
+
+  .detail-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .detail-row i {
+    color: var(--textMuted);
+    font-size: .85rem;
+    flex-shrink: 0;
+    width: 14px;
+    text-align: center;
+  }
+
+  .detail-mono {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: .85rem;
+    color: var(--textMid);
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  .detail-hotel {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--goldDark);
+    background: var(--goldFaint);
+    border: 1px solid var(--goldBorder);
+    border-radius: 20px;
+    padding: 3px 10px;
+    margin: 2px 4px 2px 0;
+  }
 </style>
